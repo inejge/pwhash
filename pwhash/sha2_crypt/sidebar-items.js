@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["DEFAULT_ROUNDS","Default number of rounds."],["MAX_ROUNDS","Maximum rounds."],["MAX_SALT_LEN","Maximum (and default) salt length."],["MIN_ROUNDS","Minimum rounds."]]});

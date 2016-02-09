@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["MAX_SALT_LEN","Maximium salt length."]],"fn":[["hash","Hash a password with a randomly generated salt."],["hash_with","Hash a password with user-provided parameters."],["verify","Verify that the hash corresponds to a password."]]});

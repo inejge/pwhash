@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["SALT_LEN","Salt length."]],"fn":[["hash","Hash a password with a randomly generated salt."],["hash_with","Hash a password with a user-provided salt."],["verify","Verify that the hash corresponds to a password."]]});
