@@ -1,0 +1,15 @@
+[package]
+name = "pwhash"
+version = "0.1.0"
+authors = ["Ivan Nejgebauer <inejge@gmail.com>"]
+description = "A collection of password hashing routines in pure Rust."
+documentation = "https://inejge.github.io/pwhash"
+homepage = "https://github.com/inejge/pwhash"
+repository = "https://github.com/inejge/pwhash"
+readme = "README.md"
+license = "MIT"
+keywords = ["password", "hash", "bcrypt", "sha256", "sha512", "sha1", "md5", "bsdi", "unix"]
+
+[dependencies]
+rust-crypto = "0.2"
+rand = "0.3"
