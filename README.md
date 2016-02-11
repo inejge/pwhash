@@ -17,7 +17,7 @@ pwhash = "0.1"
 Also, import the crate in your crate root:
 
 ```rust
-extern crate microlib;
+extern crate pwhash;
 ```
 
 ## Example
