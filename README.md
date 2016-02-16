@@ -33,7 +33,7 @@ let h_new = bcrypt::hash("password").unwrap();
 // Verify a password against an existing hash.
 let h = "$2y$05$bvIG6Nmid91Mu9RcmmWZfO\
          5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe";
-assert_eq!(bcrypt::verify("password", h), true);
+assert!(bcrypt::verify("password", h));
 ```
 
 ## Summary
