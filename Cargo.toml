@@ -1,6 +1,6 @@
 [package]
 name = "pwhash"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Ivan Nejgebauer <inejge@gmail.com>"]
 description = "A collection of password hashing routines in pure Rust."
 documentation = "https://inejge.github.io/pwhash"
