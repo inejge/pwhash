@@ -9,6 +9,7 @@ repository = "https://github.com/inejge/pwhash"
 readme = "README.md"
 license = "MIT"
 keywords = ["password", "hash", "hashing", "crypt"]
+categories = ["cryptography", "authentication"]
 
 [dependencies]
 rust-crypto = "0.2"
