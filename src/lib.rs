@@ -339,11 +339,7 @@ pub mod unix {
 		"6" => sha512_crypt::hash_with(hash, pass),
 		_ => return Err(Error::InvalidHashString)
 	    },
-	    _ => if hash.len() == 13 {
-		unix_crypt::hash_with(hash, pass)
-	    } else {
-		return Err(Error::InvalidHashString)
-	    }
+	    _ => unix_crypt::hash_with(hash, pass)
 	}
     }
 
@@ -359,12 +355,6 @@ pub mod unix {
 	    assert_eq!(super::crypt("password", "$1$5pZSV9va$azfrPr6af3Fc7dLblQXVa0").unwrap(),
 		"$1$5pZSV9va$azfrPr6af3Fc7dLblQXVa0");
 	    assert_eq!(super::crypt("test", "aZGJuE6EXrjEE").unwrap(), "aZGJuE6EXrjEE");
-	}
-
-	#[test]
-	#[should_panic(expected="value: InvalidHashString")]
-	fn crypt_unrecognized() {
-	    let _ = super::crypt("test", "RZA/GZA").unwrap();
 	}
     }
 }
