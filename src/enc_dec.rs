@@ -39,12 +39,13 @@ pub fn bcrypt_hash64_decode(enc: &str, decbuf: &mut [u8]) -> Result<()> {
     let mut cpos = 0;
     let mut dec_idx = 0;
     for b in enc.chars() {
+        let char = b;
         let b = b as u32 - 0x20;
         if b > 0x60 {
             return Err(Error::EncodingError);
         }
         let dec = BCRYPT_HASH64_ENC_MAP[b as usize];
-        if dec == 64 {
+        if dec == 64 && char != '=' && char != '+' {
             return Err(Error::EncodingError);
         }
         if cpos == 0 {

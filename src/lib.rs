@@ -283,7 +283,7 @@ mod parse {
 
         #[test]
         fn drain_string() {
-            let mut hs = HashSlice::new("$2y$05$bvIG6Nmid91Mu9RcmmWZfO5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe");
+            let mut hs: HashSlice = HashSlice::new("$2y$05$bvIG6Nmid91Mu9RcmmWZfO5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe");
             assert_eq!(hs.take_until(b'$').unwrap(), "");
             assert_eq!(hs.take_until(b'$').unwrap(), "2y");
             assert_eq!(hs.take_until(b'$').unwrap(), "05");
