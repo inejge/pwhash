@@ -29,32 +29,34 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-	match *self {
-	    Error::Io(ref err) => write!(f, "{}", err),
-	    _ => write!(f, "{}", self.description()),
-	}
+        match *self {
+            Error::Io(ref err) => write!(f, "{}", err),
+            _ => write!(f, "{}", self.description()),
+        }
     }
 }
 
 impl StdError for Error {
     fn description(&self) -> &str {
-	match *self {
-	    Error::Io(_) => "I/O error",
-	    Error::EncodingError => "Invalid encoding",
-	    Error::InsufficientLength => "Encoded value is too short",
-	    Error::InvalidRounds => "Invalid rounds value",
-	    Error::InvalidHashString => "Invalid hash string",
-	}
+        match *self {
+            Error::Io(_) => "I/O error",
+            Error::EncodingError => "Invalid encoding",
+            Error::InsufficientLength => "Encoded value is too short",
+            Error::InvalidRounds => "Invalid rounds value",
+            Error::InvalidHashString => "Invalid hash string",
+        }
     }
 
     fn cause(&self) -> Option<&StdError> {
-	match *self {
-	    Error::Io(ref err) => Some(err),
-	    _ => None,
-	}
+        match *self {
+            Error::Io(ref err) => Some(err),
+            _ => None,
+        }
     }
 }
 
 impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error { Error::Io(err) }
+    fn from(err: io::Error) -> Error {
+        Error::Io(err)
+    }
 }

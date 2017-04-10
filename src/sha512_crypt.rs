@@ -59,13 +59,19 @@ pub use sha2_crypt::DEFAULT_ROUNDS;
 pub use sha2_crypt::MAX_SALT_LEN;
 
 const SHA512_MAGIC: &'static str = "$6$";
-const SHA512_TRANSPOSE: &'static [u8] = b"\x2a\x15\x00\x01\x2b\x16\x17\x02\x2c\x2d\x18\x03\x04\x2e\x19\x1a\
+const SHA512_TRANSPOSE: &'static [u8] =
+    b"\x2a\x15\x00\x01\x2b\x16\x17\x02\x2c\x2d\x18\x03\x04\x2e\x19\x1a\
 					  \x05\x2f\x30\x1b\x06\x07\x31\x1c\x1d\x08\x32\x33\x1e\x09\x0a\x34\
 					  \x1f\x20\x0b\x35\x36\x21\x0c\x0d\x37\x22\x23\x0e\x38\x39\x24\x0f\
 					  \x10\x3a\x25\x26\x11\x3b\x3c\x27\x12\x13\x3d\x28\x29\x14\x3e\x3f";
 
 fn do_sha512_crypt(pass: &str, salt: &str, rounds: Option<u32>) -> Result<String> {
-    sha2_crypt(pass, salt, rounds, Sha512::new, SHA512_TRANSPOSE, SHA512_MAGIC)
+    sha2_crypt(pass,
+               salt,
+               rounds,
+               Sha512::new,
+               SHA512_TRANSPOSE,
+               SHA512_MAGIC)
 }
 
 /// Hash a password with a randomly generated salt and the default
@@ -89,8 +95,12 @@ fn parse_sha512_hash(hash: &str) -> Result<HashSetup> {
 /// If the salt is too long, it is truncated to maximum length. If it contains
 /// an invalid character, an error is returned. An out-of-range rounds value
 /// will be coerced into the allowed range.
-pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
-    sha2_hash_with(try!(IHS::into_hash_setup(param, parse_sha512_hash)), pass, do_sha512_crypt)
+pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String>
+    where IHS: IntoHashSetup<'a>
+{
+    sha2_hash_with(try!(IHS::into_hash_setup(param, parse_sha512_hash)),
+                   pass,
+                   do_sha512_crypt)
 }
 
 /// Verify that the hash corresponds to a password.
@@ -100,26 +110,32 @@ pub fn verify(pass: &str, hash: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use ::HashSetup;
+    use HashSetup;
 
     #[test]
     fn custom() {
-	assert_eq!(super::hash_with(
+        assert_eq!(super::hash_with(
 		   "$6$rounds=11531$G/gkPn17kHYo0gTF$Kq.uZBHlSBXyzsOJXtxJruOOH4yc0Is13\
 		    uY7yK0PvAvXxbvc1w8DO1RzREMhKsc82K/Jh8OquV8FZUlreYPJk1", "test").unwrap(),
 	    "$6$rounds=11531$G/gkPn17kHYo0gTF$Kq.uZBHlSBXyzsOJXtxJruOOH4yc0Is13\
 	     uY7yK0PvAvXxbvc1w8DO1RzREMhKsc82K/Jh8OquV8FZUlreYPJk1");
-	assert_eq!(super::hash_with(HashSetup { salt: Some("G/gkPn17kHYo0gTF"), rounds: Some(11531) }, "test").unwrap(),
-	    "$6$rounds=11531$G/gkPn17kHYo0gTF$Kq.uZBHlSBXyzsOJXtxJruOOH4yc0Is13\
+        assert_eq!(super::hash_with(HashSetup {
+                                        salt: Some("G/gkPn17kHYo0gTF"),
+                                        rounds: Some(11531),
+                                    },
+                                    "test")
+                           .unwrap(),
+                   "$6$rounds=11531$G/gkPn17kHYo0gTF$Kq.uZBHlSBXyzsOJXtxJruOOH4yc0Is13\
 	     uY7yK0PvAvXxbvc1w8DO1RzREMhKsc82K/Jh8OquV8FZUlreYPJk1");
     }
 
     #[test]
     fn implicit_dflt_rounds() {
-	assert_eq!(super::hash_with(
-		   "$6$G/gkPn17kHYo0gTF$xhDFU0QYExdMH2ghOWKrrVtu1BuTpNMSJURCXk43.\
-		    EYekmK8iwV6RNqftUUC8mqDel1J7m3JEbUkbu4YyqSyv/", "test").unwrap(),
-	    "$6$G/gkPn17kHYo0gTF$xhDFU0QYExdMH2ghOWKrrVtu1BuTpNMSJURCXk43.\
+        assert_eq!(super::hash_with("$6$G/gkPn17kHYo0gTF$xhDFU0QYExdMH2ghOWKrrVtu1BuTpNMSJURCXk43.\
+		    EYekmK8iwV6RNqftUUC8mqDel1J7m3JEbUkbu4YyqSyv/",
+                                    "test")
+                           .unwrap(),
+                   "$6$G/gkPn17kHYo0gTF$xhDFU0QYExdMH2ghOWKrrVtu1BuTpNMSJURCXk43.\
 	     EYekmK8iwV6RNqftUUC8mqDel1J7m3JEbUkbu4YyqSyv/");
     }
 }
