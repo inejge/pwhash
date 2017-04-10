@@ -58,11 +58,17 @@ pub use sha2_crypt::DEFAULT_ROUNDS;
 pub use sha2_crypt::MAX_SALT_LEN;
 
 const SHA256_MAGIC: &'static str = "$5$";
-const SHA256_TRANSPOSE: &'static [u8] = b"\x14\x0a\x00\x0b\x01\x15\x02\x16\x0c\x17\x0d\x03\x0e\x04\x18\x05\
+const SHA256_TRANSPOSE: &'static [u8] =
+    b"\x14\x0a\x00\x0b\x01\x15\x02\x16\x0c\x17\x0d\x03\x0e\x04\x18\x05\
 					  \x19\x0f\x1a\x10\x06\x11\x07\x1b\x08\x1c\x12\x1d\x13\x09\x1e\x1f";
 
 fn do_sha256_crypt(pass: &str, salt: &str, rounds: Option<u32>) -> Result<String> {
-    sha2_crypt(pass, salt, rounds, Sha256::new, SHA256_TRANSPOSE, SHA256_MAGIC)
+    sha2_crypt(pass,
+               salt,
+               rounds,
+               Sha256::new,
+               SHA256_TRANSPOSE,
+               SHA256_MAGIC)
 }
 
 /// Hash a password with a randomly generated salt and the default
@@ -86,8 +92,12 @@ fn parse_sha256_hash(hash: &str) -> Result<HashSetup> {
 /// If the salt is too long, it is truncated to maximum length. If it contains
 /// an invalid character, an error is returned. An out-of-range rounds value
 /// will be coerced into the allowed range.
-pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
-    sha2_hash_with(try!(IHS::into_hash_setup(param, parse_sha256_hash)), pass, do_sha256_crypt)
+pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String>
+    where IHS: IntoHashSetup<'a>
+{
+    sha2_hash_with(try!(IHS::into_hash_setup(param, parse_sha256_hash)),
+                   pass,
+                   do_sha256_crypt)
 }
 
 /// Verify that the hash corresponds to a password.
@@ -97,20 +107,26 @@ pub fn verify(pass: &str, hash: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use ::HashSetup;
+    use HashSetup;
 
     #[test]
     fn custom() {
-	assert_eq!(super::hash_with(
-		   "$5$rounds=11858$WH1ABM5sKhxbkgCK$aTQsjPkz0rBsH3lQlJxw9HDTDXPKBxC0LlVeV69P.t1", "test").unwrap(),
+        assert_eq!(super::hash_with(
+		   "$5$rounds=11858$WH1ABM5sKhxbkgCK$aTQsjPkz0rBsH3lQlJxw9HDTDXPKBxC0LlVeV69P.t1", "test")
+            .unwrap(),
 	    "$5$rounds=11858$WH1ABM5sKhxbkgCK$aTQsjPkz0rBsH3lQlJxw9HDTDXPKBxC0LlVeV69P.t1");
-	assert_eq!(super::hash_with(HashSetup { salt: Some("WH1ABM5sKhxbkgCK"), rounds: Some(11858) }, "test").unwrap(),
-	    "$5$rounds=11858$WH1ABM5sKhxbkgCK$aTQsjPkz0rBsH3lQlJxw9HDTDXPKBxC0LlVeV69P.t1");
+        assert_eq!(super::hash_with(HashSetup {
+                                        salt: Some("WH1ABM5sKhxbkgCK"),
+                                        rounds: Some(11858),
+                                    },
+                                    "test")
+                           .unwrap(),
+                   "$5$rounds=11858$WH1ABM5sKhxbkgCK$aTQsjPkz0rBsH3lQlJxw9HDTDXPKBxC0LlVeV69P.t1");
     }
 
     #[test]
     fn implicit_dflt_rounds() {
-	assert_eq!(super::hash_with(
+        assert_eq!(super::hash_with(
 		   "$5$WH1ABM5sKhxbkgCK$sOnTVjQn1Y3EWibd8gWqqJqjH.KaFrxJE5rijqxcPp7", "test").unwrap(),
 	    "$5$WH1ABM5sKhxbkgCK$sOnTVjQn1Y3EWibd8gWqqJqjH.KaFrxJE5rijqxcPp7");
     }

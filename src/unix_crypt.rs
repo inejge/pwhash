@@ -19,7 +19,7 @@
 //!     "password").unwrap(), "xOAFZqRz5RduI");
 //! assert_eq!(unix_crypt::verify("password","xOAFZqRz5RduI"),
 //!     true);
-//!     
+//!
 //! ```
 //!
 //! # Parameters
@@ -72,21 +72,21 @@ pub fn verify(pass: &str, hash: &str) -> bool {
 mod tests {
     #[test]
     fn custom() {
-	assert_eq!("aZGJuE6EXrjEE", super::hash_with("aZ", "test").unwrap());
-	assert_eq!(super::verify("test", "aZGJuE6EXrjEE"), true);
-	assert_eq!(super::verify("test", "aZFJuE6EXrjEE"), false);
-	assert_eq!(super::verify("test", "!!"), false);
+        assert_eq!("aZGJuE6EXrjEE", super::hash_with("aZ", "test").unwrap());
+        assert_eq!(super::verify("test", "aZGJuE6EXrjEE"), true);
+        assert_eq!(super::verify("test", "aZFJuE6EXrjEE"), false);
+        assert_eq!(super::verify("test", "!!"), false);
     }
 
     #[test]
     #[should_panic(expected="value: EncodingError")]
     fn bad_salt_chars() {
-	let _ = super::hash_with("!!", "test").unwrap();
+        let _ = super::hash_with("!!", "test").unwrap();
     }
 
     #[test]
     #[should_panic(expected="value: InsufficientLength")]
     fn short_salt() {
-	let _ = super::hash_with("Z", "test").unwrap();
+        let _ = super::hash_with("Z", "test").unwrap();
     }
 }

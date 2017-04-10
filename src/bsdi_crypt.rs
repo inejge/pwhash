@@ -71,19 +71,22 @@ pub fn hash(pass: &str) -> Result<String> {
 fn parse_bsdi_hash(hash: &str) -> Result<HashSetup> {
     let mut hs = parse::HashSlice::new(hash);
     if hs.take(1).unwrap_or("X") != "_" {
-	return Err(Error::InvalidHashString);
+        return Err(Error::InvalidHashString);
     }
     let rounds = if let Some(rounds_enc) = hs.take(ROUNDS_LEN) {
-	try!(decode_val(rounds_enc, SALT_LEN))
+        try!(decode_val(rounds_enc, SALT_LEN))
     } else {
-	return Err(Error::InvalidHashString);
+        return Err(Error::InvalidHashString);
     };
     let salt = if let Some(salt) = hs.take(SALT_LEN) {
-	salt
+        salt
     } else {
-	return Err(Error::InvalidHashString);
+        return Err(Error::InvalidHashString);
     };
-    Ok(HashSetup { salt: Some(salt), rounds: Some(rounds) })
+    Ok(HashSetup {
+           salt: Some(salt),
+           rounds: Some(rounds),
+       })
 }
 
 /// Hash a password with user-provided parameters.
@@ -92,19 +95,23 @@ fn parse_bsdi_hash(hash: &str) -> Result<HashSetup> {
 /// format. The number of rounds and the salt are parsed out of that value.
 /// An error is returned if the salt is too short or contains an invalid
 /// character. An out-of-range rounds value will also result in an error.
-pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
+pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String>
+    where IHS: IntoHashSetup<'a>
+{
     let hs = try!(IHS::into_hash_setup(param, parse_bsdi_hash));
     let rounds = if let Some(r) = hs.rounds {
-	if r < MIN_ROUNDS || r > MAX_ROUNDS {
-	    return Err(Error::InvalidRounds);
-	}
-	r
-    } else { DEFAULT_ROUNDS };
-    if hs.salt.is_some() {
-	bsdi_crypt(pass, hs.salt.unwrap(), rounds)
+        if r < MIN_ROUNDS || r > MAX_ROUNDS {
+            return Err(Error::InvalidRounds);
+        }
+        r
     } else {
-	let saltstr = try!(random::gen_salt_str(SALT_LEN));
-	bsdi_crypt(pass, &saltstr, rounds)
+        DEFAULT_ROUNDS
+    };
+    if hs.salt.is_some() {
+        bsdi_crypt(pass, hs.salt.unwrap(), rounds)
+    } else {
+        let saltstr = try!(random::gen_salt_str(SALT_LEN));
+        bsdi_crypt(pass, &saltstr, rounds)
     }
 }
 
@@ -115,18 +122,29 @@ pub fn verify(pass: &str, hash: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use ::HashSetup;
+    use HashSetup;
 
     #[test]
     fn custom() {
-	assert_eq!(super::hash_with(HashSetup { salt: Some("K0Ay"), rounds: None }, "password").unwrap(),
-	    "_Gl/.K0Ay.aosctsbJ1k");
-	assert_eq!(super::hash_with("_Gl/.K0Ay.aosctsbJ1k", "password").unwrap(), "_Gl/.K0Ay.aosctsbJ1k");
+        assert_eq!(super::hash_with(HashSetup {
+                                        salt: Some("K0Ay"),
+                                        rounds: None,
+                                    },
+                                    "password")
+                           .unwrap(),
+                   "_Gl/.K0Ay.aosctsbJ1k");
+        assert_eq!(super::hash_with("_Gl/.K0Ay.aosctsbJ1k", "password").unwrap(),
+                   "_Gl/.K0Ay.aosctsbJ1k");
     }
 
     #[test]
     #[should_panic(expected="value: InvalidRounds")]
     fn bad_rounds() {
-	let _ = super::hash_with(HashSetup { salt: Some("K0Ay"), rounds: Some(0) }, "password").unwrap();
+        let _ = super::hash_with(HashSetup {
+                                     salt: Some("K0Ay"),
+                                     rounds: Some(0),
+                                 },
+                                 "password")
+                .unwrap();
     }
 }
