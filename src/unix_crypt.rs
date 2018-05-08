@@ -51,7 +51,7 @@ pub const SALT_LEN: usize = 2;
 /// An error is returned if the system random number generator cannot
 /// be opened.
 pub fn hash(pass: &str) -> Result<String> {
-    let saltstr = try!(random::gen_salt_str(SALT_LEN));
+    let saltstr = random::gen_salt_str(SALT_LEN)?;
     unix_crypt(pass, &saltstr)
 }
 

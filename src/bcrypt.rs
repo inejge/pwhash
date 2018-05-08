@@ -169,7 +169,7 @@ impl<'a> IntoBcryptSetup<'a> for &'a str {
 	    if cost_str.len() != 2 {
 		return Err(Error::InvalidHashString);
 	    }
-	    let cost = try!(cost_str.parse::<u32>().map_err(|_e| Error::InvalidRounds));
+	    let cost = cost_str.parse::<u32>().map_err(|_e| Error::InvalidRounds)?;
 	    if cost < 10 && !cost_str.starts_with('0') {
 		return Err(Error::InvalidHashString);
 	    }
@@ -222,7 +222,7 @@ fn do_bcrypt(pass: &str, salt: &[u8], cost: u32, variant: BcryptVariant) -> Resu
 /// be opened.
 pub fn hash(pass: &str) -> Result<String> {
     let mut salt_buf = [0u8; 16];
-    try!(random::gen_salt_bytes(&mut salt_buf));
+    random::gen_salt_bytes(&mut salt_buf)?;
     do_bcrypt(pass, &salt_buf, DEFAULT_COST, DEFAULT_VARIANT)
 }
 
@@ -234,7 +234,7 @@ pub fn hash(pass: &str) -> Result<String> {
 /// `BcryptSetup`, which makes it easier to initialize just the desired
 /// fields (see the module-level example.)
 pub fn hash_with<'a, IBS>(param: IBS, pass: &str) -> Result<String> where IBS: IntoBcryptSetup<'a> {
-    let bs = try!(param.into_bcrypt_setup());
+    let bs = param.into_bcrypt_setup()?;
     let cost = if let Some(c) = bs.cost {
 	if c < MIN_COST || c > MAX_COST {
 	    return Err(Error::InvalidRounds);
@@ -246,9 +246,9 @@ pub fn hash_with<'a, IBS>(param: IBS, pass: &str) -> Result<String> where IBS: I
     } else { DEFAULT_VARIANT };
     let mut salt_buf = [0u8; 16];
     if bs.salt.is_some() {
-	try!(bcrypt_hash64_decode(bs.salt.unwrap(), &mut salt_buf));
+	bcrypt_hash64_decode(bs.salt.unwrap(), &mut salt_buf)?;
     } else {
-	try!(random::gen_salt_bytes(&mut salt_buf));
+	random::gen_salt_bytes(&mut salt_buf)?;
     }
     do_bcrypt(pass, &salt_buf, cost, variant)
 }

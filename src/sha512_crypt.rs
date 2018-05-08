@@ -74,7 +74,7 @@ fn do_sha512_crypt(pass: &str, salt: &str, rounds: Option<u32>) -> Result<String
 /// An error is returned if the system random number generator cannot
 /// be opened.
 pub fn hash(pass: &str) -> Result<String> {
-    let saltstr = try!(random::gen_salt_str(MAX_SALT_LEN));
+    let saltstr = random::gen_salt_str(MAX_SALT_LEN)?;
     do_sha512_crypt(pass, &saltstr, None)
 }
 
@@ -90,7 +90,7 @@ fn parse_sha512_hash(hash: &str) -> Result<HashSetup> {
 /// an invalid character, an error is returned. An out-of-range rounds value
 /// will be coerced into the allowed range.
 pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
-    sha2_hash_with(try!(IHS::into_hash_setup(param, parse_sha512_hash)), pass, do_sha512_crypt)
+    sha2_hash_with(IHS::into_hash_setup(param, parse_sha512_hash)?, pass, do_sha512_crypt)
 }
 
 /// Verify that the hash corresponds to a password.

@@ -65,7 +65,7 @@ pub const DEFAULT_SALT_LEN: usize = 8;
 
 fn do_sha1_crypt(pass: &str, salt: &str, rounds: u32) -> Result<String> {
     let mut dummy_buf = [0u8; 48];
-    try!(bcrypt_hash64_decode(salt, &mut dummy_buf));
+    bcrypt_hash64_decode(salt, &mut dummy_buf)?;
     let mut hmac = Hmac::new(Sha1::new(), pass.as_bytes());
     hmac.input(format!("{}$sha1${}", salt, rounds).as_bytes());
     let mut result = hmac.result();
@@ -83,7 +83,7 @@ fn do_sha1_crypt(pass: &str, salt: &str, rounds: u32) -> Result<String> {
 /// An error is returned if the system random number generator cannot
 /// be opened.
 pub fn hash(pass: &str) -> Result<String> {
-    let saltstr = try!(random::gen_salt_str(DEFAULT_SALT_LEN));
+    let saltstr = random::gen_salt_str(DEFAULT_SALT_LEN)?;
     do_sha1_crypt(pass, &saltstr, random::vary_rounds(DEFAULT_ROUNDS))
 }
 
@@ -95,7 +95,7 @@ fn parse_sha1_hash(hash: &str) -> Result<HashSetup> {
 	return Err(Error::InvalidHashString);
     }
     let rounds = if let Some(rounds_str) = hs.take_until(b'$') {
-	try!(rounds_str.parse::<u32>().map_err(|_e| Error::InvalidRounds))
+	rounds_str.parse::<u32>().map_err(|_e| Error::InvalidRounds)?
     } else {
 	return Err(Error::InvalidHashString);
     };
@@ -116,7 +116,7 @@ fn parse_sha1_hash(hash: &str) -> Result<HashSetup> {
 /// an invalid character, an error is returned. An out-of-range rounds value
 /// will also result in an error.
 pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
-    let hs = try!(IHS::into_hash_setup(param, parse_sha1_hash));
+    let hs = IHS::into_hash_setup(param, parse_sha1_hash)?;
     let rounds = if let Some(r) = hs.rounds {
 	if r < MIN_ROUNDS {
 	    return Err(Error::InvalidRounds);
@@ -133,7 +133,7 @@ pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: I
 	};
 	do_sha1_crypt(pass, salt, rounds)
     } else {
-	let salt = try!(random::gen_salt_str(DEFAULT_SALT_LEN));
+	let salt = random::gen_salt_str(DEFAULT_SALT_LEN)?;
 	do_sha1_crypt(pass, &salt, rounds)
     }
 }

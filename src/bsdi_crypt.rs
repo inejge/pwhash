@@ -64,7 +64,7 @@ const ROUNDS_LEN: usize = 4;
 /// An error is returned if the system random number generator cannot
 /// be opened.
 pub fn hash(pass: &str) -> Result<String> {
-    let saltstr = try!(random::gen_salt_str(SALT_LEN));
+    let saltstr = random::gen_salt_str(SALT_LEN)?;
     bsdi_crypt(pass, &saltstr, DEFAULT_ROUNDS)
 }
 
@@ -74,7 +74,7 @@ fn parse_bsdi_hash(hash: &str) -> Result<HashSetup> {
 	return Err(Error::InvalidHashString);
     }
     let rounds = if let Some(rounds_enc) = hs.take(ROUNDS_LEN) {
-	try!(decode_val(rounds_enc, SALT_LEN))
+	decode_val(rounds_enc, SALT_LEN)?
     } else {
 	return Err(Error::InvalidHashString);
     };
@@ -93,7 +93,7 @@ fn parse_bsdi_hash(hash: &str) -> Result<HashSetup> {
 /// An error is returned if the salt is too short or contains an invalid
 /// character. An out-of-range rounds value will also result in an error.
 pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
-    let hs = try!(IHS::into_hash_setup(param, parse_bsdi_hash));
+    let hs = IHS::into_hash_setup(param, parse_bsdi_hash)?;
     let rounds = if let Some(r) = hs.rounds {
 	if r < MIN_ROUNDS || r > MAX_ROUNDS {
 	    return Err(Error::InvalidRounds);
@@ -103,7 +103,7 @@ pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: I
     if hs.salt.is_some() {
 	bsdi_crypt(pass, hs.salt.unwrap(), rounds)
     } else {
-	let saltstr = try!(random::gen_salt_str(SALT_LEN));
+	let saltstr = random::gen_salt_str(SALT_LEN)?;
 	bsdi_crypt(pass, &saltstr, rounds)
     }
 }

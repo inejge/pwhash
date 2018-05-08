@@ -156,7 +156,7 @@ mod random {
     use enc_dec::bcrypt_hash64_encode;
 
     pub fn gen_salt_str(chars: usize) -> Result<String> {
-	let mut rng = try!(OsRng::new());
+	let mut rng = OsRng::new()?;
 	let bytes = ((chars + 3) / 4) * 3;
 	let rv = rng.gen_iter::<u8>().take(bytes).collect::<Vec<_>>();
 	let mut sstr = bcrypt_hash64_encode(&rv);
@@ -167,7 +167,7 @@ mod random {
     }
 
     pub fn gen_salt_bytes(bytes: &mut [u8]) -> Result<()> {
-	let mut rng = try!(OsRng::new());
+	let mut rng = OsRng::new()?;
 	rng.fill_bytes(bytes);
 	Ok(())
     }

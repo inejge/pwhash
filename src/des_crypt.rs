@@ -573,7 +573,7 @@ const DES_ROUNDS: u32 = 25;
 
 pub fn unix_crypt(key: &str, salt: &str) -> Result<String> {
     let keyword = secret_to_key(key.as_bytes());
-    let salt_val = try!(decode_val(salt, unix_crypt::SALT_LEN));
+    let salt_val = decode_val(salt, unix_crypt::SALT_LEN)?;
     Ok(format!("{}{}", encode_val(salt_val, unix_crypt::SALT_LEN), do_0_crypt(keyword, salt_val, DES_ROUNDS)))
 }
 
@@ -590,7 +590,7 @@ pub fn bsdi_crypt(key: &str, salt: &str, rounds: u32) -> Result<String> {
 	keyword = des_cipher(keyword, keyword, 0, 1) ^ next_keyword;
 	idx += 8;
     }
-    let salt_val = try!(decode_val(salt, bsdi_crypt::SALT_LEN));
+    let salt_val = decode_val(salt, bsdi_crypt::SALT_LEN)?;
     Ok(format!("_{}{}{}", encode_val(rounds as u32, bsdi_crypt::SALT_LEN),
 	encode_val(salt_val, bsdi_crypt::SALT_LEN), do_0_crypt(keyword, salt_val, rounds)))
 }

@@ -28,7 +28,7 @@ pub fn sha2_crypt<D: Digest>(pass: &str, salt: &str, rounds: Option<u32>,
 			     new_digest: fn() -> D, trn_table: &[u8],
 			     magic: &str) -> Result<String> {
     let mut dummy_buf = [0u8; 12];
-    try!(bcrypt_hash64_decode(salt, &mut dummy_buf));
+    bcrypt_hash64_decode(salt, &mut dummy_buf)?;
 
     let mut dgst_b = new_digest();
     let dsize = dgst_b.output_bytes();
@@ -135,7 +135,7 @@ pub fn parse_sha2_hash<'a>(hash: &'a str, magic: &str) -> Result<HashSetup<'a>> 
     let rounds = if maybe_rounds.starts_with("rounds=") {
 	let mut rhs = parse::HashSlice::new(maybe_rounds);
 	rhs.take_until(b'=');
-	Some(try!(rhs.take_until(b'$').unwrap().parse::<u32>().map_err(|_e| Error::InvalidRounds)))
+	Some(rhs.take_until(b'$').unwrap().parse::<u32>().map_err(|_e| Error::InvalidRounds)?)
     } else { None };
     let salt = if rounds.is_none() {
 	maybe_rounds
@@ -167,7 +167,7 @@ pub fn sha2_hash_with(param: HashSetup, pass: &str, hf: fn(&str, &str, Option<u3
 	};
 	hf(pass, salt, rounds)
     } else {
-	let salt = try!(random::gen_salt_str(MAX_SALT_LEN));
+	let salt = random::gen_salt_str(MAX_SALT_LEN)?;
 	hf(pass, &salt, rounds)
     }
 }

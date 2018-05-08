@@ -56,7 +56,7 @@ const MD5_TRANSPOSE: &'static [u8] = b"\x0c\x06\x00\x0d\x07\x01\x0e\x08\x02\x0f\
 
 fn do_md5_crypt(pass: &str, salt: &str) -> Result<String> {
     let mut dummy_buf = [0u8; 6];
-    try!(bcrypt_hash64_decode(salt, &mut dummy_buf));
+    bcrypt_hash64_decode(salt, &mut dummy_buf)?;
 
     let mut dgst_b = Md5::new();
     let mut hash_b = [0u8; 16];
@@ -124,7 +124,7 @@ fn do_md5_crypt(pass: &str, salt: &str) -> Result<String> {
 /// An error is returned if the system random number generator cannot
 /// be opened.
 pub fn hash(pass: &str) -> Result<String> {
-    let saltstr = try!(random::gen_salt_str(MAX_SALT_LEN));
+    let saltstr = random::gen_salt_str(MAX_SALT_LEN)?;
     do_md5_crypt(pass, &saltstr)
 }
 
@@ -150,7 +150,7 @@ fn parse_md5_hash(hash: &str) -> Result<HashSetup> {
 /// If the salt is too long, it is truncated to maximum length. If it contains
 /// an invalid character, an error is returned.
 pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
-    let hs = try!(IHS::into_hash_setup(param, parse_md5_hash));
+    let hs = IHS::into_hash_setup(param, parse_md5_hash)?;
     if let Some(salt) = hs.salt {
 	let salt = if salt.len() <= MAX_SALT_LEN {
 	    salt
@@ -161,7 +161,7 @@ pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: I
 	};
 	do_md5_crypt(pass, salt)
     } else {
-	let salt = try!(random::gen_salt_str(MAX_SALT_LEN));
+	let salt = random::gen_salt_str(MAX_SALT_LEN)?;
 	do_md5_crypt(pass, &salt)
     }
 }
