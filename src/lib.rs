@@ -138,6 +138,38 @@ impl<'a> IntoHashSetup<'a> for HashSetup<'a> {
     }
 }
 
+/// A trait for extracting a NUL-terminated subslice from a slice.
+///
+/// The original Unix hashing functions expect passwords to be NUL-terminated C strings. This
+/// allows values which can't be represented by Rust strings, which are constrained to be UTF-8.
+/// On the other hand, Rust strings can contain NUL bytes, and C strings can't.
+///
+/// For maximum flexibility, hashing functions in this crate accept both strings and raw byte
+/// vectors as password input. This trait can be used to ensure that any input value will be
+/// truncated at the first NUL byte.
+pub trait FindNul {
+    /// Subslice extraction function.
+    ///
+    /// Given a slice, find and return the subslice before the first NUL byte, or the original
+    /// slice if no NUL byte is found. Before searching, the slice is converted into a byte
+    /// slice, if necessary. The returned slice also consists of raw bytes.
+    fn nul_terminated_subslice(&self) -> &[u8];
+}
+
+impl FindNul for str {
+    fn nul_terminated_subslice(&self) -> &[u8] {
+        let nul_pos = self.as_bytes().windows(1).position(|window| window == &[0u8]).unwrap_or(self.len());
+        self[..nul_pos].as_bytes()
+    }
+}
+
+impl FindNul for [u8] {
+    fn nul_terminated_subslice(&self) -> &[u8] {
+        let nul_pos = self.windows(1).position(|window| window == &[0u8]).unwrap_or(self.len());
+        self[..nul_pos].as_ref()
+    }
+}
+
 fn consteq(hash: &str, calchash: Result<String>) -> bool {
     if calchash.is_err() {
 	return false;
