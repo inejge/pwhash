@@ -9,13 +9,18 @@
 
     <title>lib.rs.html -- source</title>
 
-    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
-    <link rel="stylesheet" type="text/css" href="../../main.css">
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle">
+    
+    <link rel="stylesheet" type="text/css" href="../../dark.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css" id="themeStyle">
+    <script src="../../storage.js"></script>
+    
 
     
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc source">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -26,10 +31,18 @@
     
 
     <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
         
         
     </nav>
 
+    <div class="theme-picker">
+        <button id="theme-picker" aria-label="Pick another theme!">
+            <img src="../../brush.svg" width="18" alt="Pick another theme!">
+        </button>
+        <div id="theme-choices"></div>
+    </div>
+    <script src="../../theme.js"></script>
     <nav class="sub">
         <form class="search-form js-only">
             <div class="search-container">
@@ -41,7 +54,7 @@
         </form>
     </nav>
 
-    <section id='main' class="content source"><pre class="line-numbers"><span id="1">  1</span>
+    <section id='main' class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -411,374 +424,420 @@
 <span id="368">368</span>
 <span id="369">369</span>
 <span id="370">370</span>
-</pre><pre class='rust '>
-<span class='doccomment'>//! A collection of password hashing and verification routines.</span>
-<span class='comment'>//</span>
-<span class='comment'>// Copyright (c) 2016 Ivan Nejgebauer &lt;inejge@gmail.com&gt;</span>
-<span class='comment'>//</span>
-<span class='comment'>// Licensed under the MIT license &lt;LICENSE-MIT or</span>
-<span class='comment'>// http://opensource.org/licenses/MIT&gt;. This file may not be copied,</span>
-<span class='comment'>// modified, or distributed except according to the terms of this</span>
-<span class='comment'>// license.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! For the summary of supported algorithms and recommendations, see</span>
-<span class='doccomment'>//! [Summary](#summary). Every algorithm has its own module; alphabetical list</span>
-<span class='doccomment'>//! is in the [Modules](#modules) section.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! # Getting Started</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! Add the following to the `[dependencies]` section of your `Cargo.toml`:</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! ```toml</span>
-<span class='doccomment'>//! pwhash = &quot;0.1&quot;</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! Also, import the crate to your crate root:</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//! extern crate pwhash;</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! # Examples</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! To verify a password hashed with a known algorithm:</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//! use pwhash::bcrypt;</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! let h = &quot;$2y$05$bvIG6Nmid91Mu9RcmmWZfO\</span>
-<span class='doccomment'>//!          5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;;</span>
-<span class='doccomment'>//! assert_eq!(bcrypt::verify(&quot;password&quot;, h), true);</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! To hash a password using default parameters:</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//! use pwhash::bcrypt;</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! let h = bcrypt::hash(&quot;password&quot;).unwrap();</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! To verify a password known to be in one of Unix modular hash formats:</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//! use pwhash::unix;</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! let h = &quot;$2y$05$bvIG6Nmid91Mu9RcmmWZfO\</span>
-<span class='doccomment'>//!          5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;;</span>
-<span class='doccomment'>//! assert_eq!(unix::verify(&quot;password&quot;, h), true);</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! # Summary</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! Currently, there are implementations of seven algorithms, which should</span>
-<span class='doccomment'>//! cover anything one might find as a system-wide hash on a free Unix-like</span>
-<span class='doccomment'>//! OS: [bcrypt](bcrypt), [SHA-512](sha512_crypt), [SHA-256](sha256_crypt),</span>
-<span class='doccomment'>//! [HMAC-SHA1](sha1_crypt), [MD5](md5_crypt), [BSDi crypt](bsdi_crypt), and</span>
-<span class='doccomment'>//! [DES crypt](unix_crypt). The list is ordered roughly by security, with the</span>
-<span class='doccomment'>//! most secure algorithms first. The first two are recommended for new</span>
-<span class='doccomment'>//! passwords.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! Each algorithm is implemented in its own module, and offers three ways of</span>
-<span class='doccomment'>//! using it:</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * The `verify` function checks whether the provided hash corresponds to a</span>
-<span class='doccomment'>//!   password.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * The `hash` function hashes a password using the default parameters for the</span>
-<span class='doccomment'>//!   algorithm.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * The `hash_with` function allows the caller to customize the hashing</span>
-<span class='doccomment'>//!   parameters.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! Customization can always be accomplished by passing a `&amp;str` with encoded</span>
-<span class='doccomment'>//! parameters (in the appropriate hash format) to `hash_with`. All algorithms</span>
-<span class='doccomment'>//! except DES crypt accept a `HashSetup` struct as a means of customization,</span>
-<span class='doccomment'>//! while bcrypt also has its own setup structure (see the module documenation.)</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! The [unix](unix) module provides a __crypt__(3)-compatible function and a</span>
-<span class='doccomment'>//! `verify` which uses it to automatically recognize the algorithm of the</span>
-<span class='doccomment'>//! provided hash.</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+</pre><pre class="rust ">
+<span class="doccomment">//! A collection of password hashing and verification routines.</span>
+<span class="comment">//</span>
+<span class="comment">// Copyright (c) 2016 Ivan Nejgebauer &lt;inejge@gmail.com&gt;</span>
+<span class="comment">//</span>
+<span class="comment">// Licensed under the MIT license &lt;LICENSE-MIT or</span>
+<span class="comment">// http://opensource.org/licenses/MIT&gt;. This file may not be copied,</span>
+<span class="comment">// modified, or distributed except according to the terms of this</span>
+<span class="comment">// license.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! For the summary of supported algorithms and recommendations, see</span>
+<span class="doccomment">//! [Summary](#summary). Every algorithm has its own module; alphabetical list</span>
+<span class="doccomment">//! is in the [Modules](#modules) section.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Getting Started</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Add the following to the `[dependencies]` section of your `Cargo.toml`:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```toml</span>
+<span class="doccomment">//! pwhash = &quot;0.2&quot;</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Also, import the crate to your crate root:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! extern crate pwhash;</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Examples</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To verify a password hashed with a known algorithm:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use pwhash::bcrypt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! let h = &quot;$2y$05$bvIG6Nmid91Mu9RcmmWZfO\</span>
+<span class="doccomment">//!          5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;;</span>
+<span class="doccomment">//! assert_eq!(bcrypt::verify(&quot;password&quot;, h), true);</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To hash a password using default parameters:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use pwhash::bcrypt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! let h = bcrypt::hash(&quot;password&quot;).unwrap();</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To verify a password known to be in one of Unix modular hash formats:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use pwhash::unix;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! let h = &quot;$2y$05$bvIG6Nmid91Mu9RcmmWZfO\</span>
+<span class="doccomment">//!          5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;;</span>
+<span class="doccomment">//! assert_eq!(unix::verify(&quot;password&quot;, h), true);</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Summary</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Currently, there are implementations of seven algorithms, which should</span>
+<span class="doccomment">//! cover anything one might find as a system-wide hash on a free Unix-like</span>
+<span class="doccomment">//! OS: [bcrypt](bcrypt), [SHA-512](sha512_crypt), [SHA-256](sha256_crypt),</span>
+<span class="doccomment">//! [HMAC-SHA1](sha1_crypt), [MD5](md5_crypt), [BSDi crypt](bsdi_crypt), and</span>
+<span class="doccomment">//! [DES crypt](unix_crypt). The list is ordered roughly by security, with the</span>
+<span class="doccomment">//! most secure algorithms first. The first two are recommended for new</span>
+<span class="doccomment">//! passwords.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Each algorithm is implemented in its own module, and offers three ways of</span>
+<span class="doccomment">//! using it:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * The `verify` function checks whether the provided hash corresponds to a</span>
+<span class="doccomment">//!   password.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * The `hash` function hashes a password using the default parameters for the</span>
+<span class="doccomment">//!   algorithm.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * The `hash_with` function allows the caller to customize the hashing</span>
+<span class="doccomment">//!   parameters.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Customization can always be accomplished by passing a `&amp;str` with encoded</span>
+<span class="doccomment">//! parameters (in the appropriate hash format) to `hash_with`. All algorithms</span>
+<span class="doccomment">//! except DES crypt accept a `HashSetup` struct as a means of customization,</span>
+<span class="doccomment">//! while bcrypt also has its own setup structure (see the module documenation.)</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The [unix](unix) module provides a __crypt__(3)-compatible function and a</span>
+<span class="doccomment">//! `verify` which uses it to automatically recognize the algorithm of the</span>
+<span class="doccomment">//! provided hash.</span>
 
-<span class='attribute'>#<span class='op'>!</span>[<span class='ident'>warn</span>(<span class='ident'>missing_docs</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
 
-<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>rand</span>;
-<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>crypto</span>;
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">rand</span>;
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">crypto</span>;
 
-<span class='kw'>mod</span> <span class='ident'>enc_dec</span>;
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>error</span>;
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>unix_crypt</span>;
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>bsdi_crypt</span>;
-<span class='kw'>mod</span> <span class='ident'>des_crypt</span>;
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>bcrypt</span>;
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>sha1_crypt</span>;
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>md5_crypt</span>;
-<span class='kw'>mod</span> <span class='ident'>sha2_crypt</span>;
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>sha256_crypt</span>;
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>sha512_crypt</span>;
+<span class="kw">mod</span> <span class="ident">enc_dec</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">error</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">unix_crypt</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bsdi_crypt</span>;
+<span class="kw">mod</span> <span class="ident">des_crypt</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bcrypt</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">sha1_crypt</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">md5_crypt</span>;
+<span class="kw">mod</span> <span class="ident">sha2_crypt</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">sha256_crypt</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">sha512_crypt</span>;
 
-<span class='doccomment'>/// Type alias for the Result type.</span>
-<span class='kw'>pub</span> <span class='kw'>type</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='ident'>std</span>::<span class='ident'>result</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span>, <span class='ident'>error</span>::<span class='ident'>Error</span><span class='op'>&gt;</span>;
+<span class="doccomment">/// Type alias for the Result type.</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span>;
 
-<span class='doccomment'>/// Setup struct for basic hashing customization.</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// All implemented hash functions accept a custom salt value. If set to `None`,</span>
-<span class='doccomment'>/// a random salt will be generated. The usage of `rounds` varies with the</span>
-<span class='doccomment'>/// algorithm; visit the algorithm&#39;s module-level documentation for details.</span>
-<span class='doccomment'>/// It&#39;s always safe to initialize `rounds` to `None`, in which case the suitable</span>
-<span class='doccomment'>/// default value will be used.</span>
-<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>HashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-    <span class='doccomment'>/// Custom salt.</span>
-    <span class='kw'>pub</span> <span class='ident'>salt</span>: <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span><span class='op'>&gt;</span>,
-    <span class='doccomment'>/// Number of rounds.</span>
-    <span class='kw'>pub</span> <span class='ident'>rounds</span>: <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>u32</span><span class='op'>&gt;</span>,
+<span class="doccomment">/// Setup struct for basic hashing customization.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// All implemented hash functions accept a custom salt value. If set to `None`,</span>
+<span class="doccomment">/// a random salt will be generated. The usage of `rounds` varies with the</span>
+<span class="doccomment">/// algorithm; visit the algorithm&#39;s module-level documentation for details.</span>
+<span class="doccomment">/// It&#39;s always safe to initialize `rounds` to `None`, in which case the suitable</span>
+<span class="doccomment">/// default value will be used.</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Custom salt.</span>
+    <span class="kw">pub</span> <span class="ident">salt</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Number of rounds.</span>
+    <span class="kw">pub</span> <span class="ident">rounds</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
 }
 
-<span class='doccomment'>/// A trait for converting a type into a `HashSetup` struct.</span>
-<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>IntoHashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-    <span class='doccomment'>/// The conversion function.</span>
-    <span class='kw'>fn</span> <span class='ident'>into_hash_setup</span>(<span class='self'>self</span>, <span class='kw'>fn</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>HashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;&gt;</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>HashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;&gt;</span>;
+<span class="doccomment">/// A trait for converting a type into a `HashSetup` struct.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">IntoHashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The conversion function.</span>
+    <span class="kw">fn</span> <span class="ident">into_hash_setup</span>(<span class="self">self</span>, <span class="kw">fn</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span>;
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>IntoHashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span> {
-    <span class='kw'>fn</span> <span class='ident'>into_hash_setup</span>(<span class='self'>self</span>, <span class='ident'>f</span>: <span class='kw'>fn</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>HashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;&gt;</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>HashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;&gt;</span> {
-	<span class='ident'>f</span>(<span class='self'>self</span>)
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IntoHashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">into_hash_setup</span>(<span class="self">self</span>, <span class="ident">f</span>: <span class="kw">fn</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span> {
+	<span class="ident">f</span>(<span class="self">self</span>)
     }
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>IntoHashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='ident'>HashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-    <span class='kw'>fn</span> <span class='ident'>into_hash_setup</span>(<span class='self'>self</span>, <span class='ident'>_f</span>: <span class='kw'>fn</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>HashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;&gt;</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>HashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;&gt;</span> {
-	<span class='prelude-val'>Ok</span>(<span class='self'>self</span>)
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IntoHashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">HashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">into_hash_setup</span>(<span class="self">self</span>, <span class="ident">_f</span>: <span class="kw">fn</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span> {
+	<span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
 }
 
-<span class='kw'>fn</span> <span class='ident'>consteq</span>(<span class='ident'>hash</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>, <span class='ident'>calchash</span>: <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
-    <span class='kw'>if</span> <span class='ident'>calchash</span>.<span class='ident'>is_err</span>() {
-	<span class='kw'>return</span> <span class='boolval'>false</span>;
-    }
-    <span class='kw'>let</span> <span class='ident'>hstr</span> <span class='op'>=</span> <span class='ident'>calchash</span>.<span class='ident'>unwrap</span>();
-    <span class='kw'>if</span> <span class='ident'>hash</span>.<span class='ident'>len</span>() <span class='op'>!=</span> <span class='ident'>hstr</span>.<span class='ident'>len</span>() {
-	<span class='kw'>return</span> <span class='boolval'>false</span>;
-    }
-    <span class='number'>0</span> <span class='op'>==</span> <span class='ident'>hash</span>.<span class='ident'>bytes</span>().<span class='ident'>zip</span>(<span class='ident'>hstr</span>.<span class='ident'>bytes</span>()).<span class='ident'>fold</span>(<span class='number'>0</span>, <span class='op'>|</span><span class='ident'>xs</span>, (<span class='ident'>h1</span>, <span class='ident'>h2</span>)<span class='op'>|</span> <span class='ident'>xs</span> <span class='op'>|</span> <span class='ident'>h1</span> <span class='op'>^</span> <span class='ident'>h2</span>)
+<span class="doccomment">/// A trait for extracting a NUL-terminated subslice from a slice.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The original Unix hashing functions expect passwords to be NUL-terminated C strings. This</span>
+<span class="doccomment">/// allows values which can&#39;t be represented by Rust strings, which are constrained to be UTF-8.</span>
+<span class="doccomment">/// On the other hand, Rust strings can contain NUL bytes, and C strings can&#39;t.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// For maximum flexibility, hashing functions in this crate accept both strings and raw byte</span>
+<span class="doccomment">/// vectors as password input. This trait can be used to ensure that any input value will be</span>
+<span class="doccomment">/// truncated at the first NUL byte.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">FindNul</span> {
+    <span class="doccomment">/// Subslice extraction function.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Given a slice, find and return the subslice before the first NUL byte, or the original</span>
+    <span class="doccomment">/// slice if no NUL byte is found. Before searching, the slice is converted into a byte</span>
+    <span class="doccomment">/// slice, if necessary. The returned slice also consists of raw bytes.</span>
+    <span class="kw">fn</span> <span class="ident">nul_terminated_subslice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>];
 }
 
-<span class='kw'>mod</span> <span class='ident'>random</span> {
-    <span class='kw'>use</span> <span class='ident'>rand</span>::{<span class='ident'>Rng</span>, <span class='ident'>random</span>};
-    <span class='kw'>use</span> <span class='ident'>rand</span>::<span class='ident'>os</span>::<span class='ident'>OsRng</span>;
-    <span class='kw'>use</span> <span class='ident'>super</span>::<span class='prelude-ty'>Result</span>;
-    <span class='kw'>use</span> <span class='ident'>enc_dec</span>::<span class='ident'>bcrypt_hash64_encode</span>;
+<span class="kw">impl</span> <span class="ident">FindNul</span> <span class="kw">for</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">nul_terminated_subslice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+        <span class="kw">let</span> <span class="ident">nul_pos</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_bytes</span>().<span class="ident">windows</span>(<span class="number">1</span>).<span class="ident">position</span>(<span class="op">|</span><span class="ident">window</span><span class="op">|</span> <span class="ident">window</span> <span class="op">==</span> <span class="kw-2">&amp;</span>[<span class="number">0u8</span>]).<span class="ident">unwrap_or</span>(<span class="self">self</span>.<span class="ident">len</span>());
+        <span class="self">self</span>[..<span class="ident">nul_pos</span>].<span class="ident">as_bytes</span>()
+    }
+}
 
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>gen_salt_str</span>(<span class='ident'>chars</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> {
-	<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>rng</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>OsRng</span>::<span class='ident'>new</span>());
-	<span class='kw'>let</span> <span class='ident'>bytes</span> <span class='op'>=</span> ((<span class='ident'>chars</span> <span class='op'>+</span> <span class='number'>3</span>) <span class='op'>/</span> <span class='number'>4</span>) <span class='op'>*</span> <span class='number'>3</span>;
-	<span class='kw'>let</span> <span class='ident'>rv</span> <span class='op'>=</span> <span class='ident'>rng</span>.<span class='ident'>gen_iter</span>::<span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>().<span class='ident'>take</span>(<span class='ident'>bytes</span>).<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span>_<span class='op'>&gt;&gt;</span>();
-	<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>sstr</span> <span class='op'>=</span> <span class='ident'>bcrypt_hash64_encode</span>(<span class='kw-2'>&amp;</span><span class='ident'>rv</span>);
-	<span class='kw'>while</span> <span class='ident'>sstr</span>.<span class='ident'>len</span>() <span class='op'>&gt;</span> <span class='ident'>chars</span> {
-	    <span class='ident'>sstr</span>.<span class='ident'>pop</span>();
+<span class="kw">impl</span> <span class="ident">FindNul</span> <span class="kw">for</span> [<span class="ident">u8</span>] {
+    <span class="kw">fn</span> <span class="ident">nul_terminated_subslice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+        <span class="kw">let</span> <span class="ident">nul_pos</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">windows</span>(<span class="number">1</span>).<span class="ident">position</span>(<span class="op">|</span><span class="ident">window</span><span class="op">|</span> <span class="ident">window</span> <span class="op">==</span> <span class="kw-2">&amp;</span>[<span class="number">0u8</span>]).<span class="ident">unwrap_or</span>(<span class="self">self</span>.<span class="ident">len</span>());
+        <span class="self">self</span>[..<span class="ident">nul_pos</span>].<span class="ident">as_ref</span>()
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">consteq</span>(<span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">calchash</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">if</span> <span class="ident">calchash</span>.<span class="ident">is_err</span>() {
+	<span class="kw">return</span> <span class="bool-val">false</span>;
+    }
+    <span class="kw">let</span> <span class="ident">hstr</span> <span class="op">=</span> <span class="ident">calchash</span>.<span class="ident">unwrap</span>();
+    <span class="kw">if</span> <span class="ident">hash</span>.<span class="ident">len</span>() <span class="op">!=</span> <span class="ident">hstr</span>.<span class="ident">len</span>() {
+	<span class="kw">return</span> <span class="bool-val">false</span>;
+    }
+    <span class="number">0</span> <span class="op">==</span> <span class="ident">hash</span>.<span class="ident">bytes</span>().<span class="ident">zip</span>(<span class="ident">hstr</span>.<span class="ident">bytes</span>()).<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">xs</span>, (<span class="ident">h1</span>, <span class="ident">h2</span>)<span class="op">|</span> <span class="ident">xs</span> <span class="op">|</span> <span class="ident">h1</span> <span class="op">^</span> <span class="ident">h2</span>)
+}
+
+<span class="kw">mod</span> <span class="ident">random</span> {
+    <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">Rng</span>, <span class="ident">random</span>};
+    <span class="kw">use</span> <span class="ident">rand</span>::<span class="ident">os</span>::<span class="ident">OsRng</span>;
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="prelude-ty">Result</span>;
+    <span class="kw">use</span> <span class="ident">enc_dec</span>::<span class="ident">bcrypt_hash64_encode</span>;
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_salt_str</span>(<span class="ident">chars</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">OsRng</span>::<span class="ident">new</span>()<span class="question-mark">?</span>;
+	<span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> ((<span class="ident">chars</span> <span class="op">+</span> <span class="number">3</span>) <span class="op">/</span> <span class="number">4</span>) <span class="op">*</span> <span class="number">3</span>;
+	<span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_iter</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>().<span class="ident">take</span>(<span class="ident">bytes</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;&gt;</span>();
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sstr</span> <span class="op">=</span> <span class="ident">bcrypt_hash64_encode</span>(<span class="kw-2">&amp;</span><span class="ident">rv</span>);
+	<span class="kw">while</span> <span class="ident">sstr</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">chars</span> {
+	    <span class="ident">sstr</span>.<span class="ident">pop</span>();
 	}
-	<span class='prelude-val'>Ok</span>(<span class='ident'>sstr</span>)
+	<span class="prelude-val">Ok</span>(<span class="ident">sstr</span>)
     }
 
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>gen_salt_bytes</span>(<span class='ident'>bytes</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> [<span class='ident'>u8</span>]) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>()<span class='op'>&gt;</span> {
-	<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>rng</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>OsRng</span>::<span class='ident'>new</span>());
-	<span class='ident'>rng</span>.<span class='ident'>fill_bytes</span>(<span class='ident'>bytes</span>);
-	<span class='prelude-val'>Ok</span>(())
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_salt_bytes</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">OsRng</span>::<span class="ident">new</span>()<span class="question-mark">?</span>;
+	<span class="ident">rng</span>.<span class="ident">fill_bytes</span>(<span class="ident">bytes</span>);
+	<span class="prelude-val">Ok</span>(())
     }
 
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>vary_rounds</span>(<span class='ident'>ceil</span>: <span class='ident'>u32</span>) <span class='op'>-&gt;</span> <span class='ident'>u32</span> {
-	<span class='ident'>ceil</span> <span class='op'>-</span> (<span class='ident'>random</span>::<span class='op'>&lt;</span><span class='ident'>u32</span><span class='op'>&gt;</span>() <span class='op'>%</span> (<span class='ident'>ceil</span> <span class='op'>/</span> <span class='number'>4</span>))
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vary_rounds</span>(<span class="ident">ceil</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> <span class="ident">u32</span> {
+	<span class="ident">ceil</span> <span class="op">-</span> (<span class="ident">random</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>() <span class="op">%</span> (<span class="ident">ceil</span> <span class="op">/</span> <span class="number">4</span>))
     }
 }
 
-<span class='kw'>mod</span> <span class='ident'>parse</span> {
-    <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>str</span>;
+<span class="kw">mod</span> <span class="ident">parse</span> {
+    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>;
 
-    <span class='doccomment'>/// A trait for traversing a hash string.</span>
-    <span class='doccomment'>///</span>
-    <span class='doccomment'>/// Hash strings have internal structure: they consist of a concatenation</span>
-    <span class='doccomment'>/// of a number of substrings. This trait enables extracting references to</span>
-    <span class='doccomment'>/// those substrings with the necessary semantics.</span>
-    <span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>HashIterator</span> {
-	<span class='doccomment'>/// The substring that is returned by methods.</span>
-	<span class='kw'>type</span> <span class='ident'>Elem</span>;
+    <span class="doccomment">/// A trait for traversing a hash string.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Hash strings have internal structure: they consist of a concatenation</span>
+    <span class="doccomment">/// of a number of substrings. This trait enables extracting references to</span>
+    <span class="doccomment">/// those substrings with the necessary semantics.</span>
+    <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">HashIterator</span> {
+	<span class="doccomment">/// The substring that is returned by methods.</span>
+	<span class="kw">type</span> <span class="ident">Elem</span>;
 
-	<span class='doccomment'>/// Extract a fixed-size substring.</span>
-	<span class='doccomment'>///</span>
-	<span class='doccomment'>/// There must be &lt;i&gt;at least&lt;/i&gt; `n` ASCII characters remaining in the</span>
-	<span class='doccomment'>/// string. If there are less, `None` is returned. If called with a non-zero</span>
-	<span class='doccomment'>/// `n`, this method drains the string: if there are exactly `n` characters</span>
-	<span class='doccomment'>/// remaining, subsequent calls will return `None`.</span>
-	<span class='doccomment'>///</span>
-	<span class='doccomment'>/// Calling `take` with `n` set to zero returns an empty string if the main</span>
-	<span class='doccomment'>/// string is not drained.</span>
-	<span class='kw'>fn</span> <span class='ident'>take</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>n</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>Self</span>::<span class='ident'>Elem</span><span class='op'>&gt;</span>;
+	<span class="doccomment">/// Extract a fixed-size substring.</span>
+	<span class="doccomment">///</span>
+	<span class="doccomment">/// There must be &lt;i&gt;at least&lt;/i&gt; `n` ASCII characters remaining in the</span>
+	<span class="doccomment">/// string. If there are less, `None` is returned. If called with a non-zero</span>
+	<span class="doccomment">/// `n`, this method drains the string: if there are exactly `n` characters</span>
+	<span class="doccomment">/// remaining, subsequent calls will return `None`.</span>
+	<span class="doccomment">///</span>
+	<span class="doccomment">/// Calling `take` with `n` set to zero returns an empty string if the main</span>
+	<span class="doccomment">/// string is not drained.</span>
+	<span class="kw">fn</span> <span class="ident">take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Elem</span><span class="op">&gt;</span>;
 
-	<span class='doccomment'>/// Extract a substring delimited by a byte.</span>
-	<span class='doccomment'>///</span>
-	<span class='doccomment'>/// Return a substring from the current position to the next occurrence of the</span>
-	<span class='doccomment'>/// ASCII delimiter `ac` or the end of the string. If the delimiter is found,</span>
-	<span class='doccomment'>/// advance the position one byte after it. Drains the string.</span>
-	<span class='kw'>fn</span> <span class='ident'>take_until</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>ac</span>: <span class='ident'>u8</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>Self</span>::<span class='ident'>Elem</span><span class='op'>&gt;</span>;
+	<span class="doccomment">/// Extract a substring delimited by a byte.</span>
+	<span class="doccomment">///</span>
+	<span class="doccomment">/// Return a substring from the current position to the next occurrence of the</span>
+	<span class="doccomment">/// ASCII delimiter `ac` or the end of the string. If the delimiter is found,</span>
+	<span class="doccomment">/// advance the position one byte after it. Drains the string.</span>
+	<span class="kw">fn</span> <span class="ident">take_until</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ac</span>: <span class="ident">u8</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Elem</span><span class="op">&gt;</span>;
 
-	<span class='doccomment'>/// Returns `true` if the string is not drained.</span>
-	<span class='kw'>fn</span> <span class='ident'>at_end</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span>;
+	<span class="doccomment">/// Returns `true` if the string is not drained.</span>
+	<span class="kw">fn</span> <span class="ident">at_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
     }
 
-    <span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>HashSlice</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-	<span class='ident'>bp</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> [<span class='ident'>u8</span>],
-	<span class='ident'>len</span>: <span class='ident'>usize</span>,
-	<span class='ident'>pos</span>: <span class='ident'>usize</span>,
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HashSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+	<span class="ident">bp</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>],
+	<span class="ident">len</span>: <span class="ident">usize</span>,
+	<span class="ident">pos</span>: <span class="ident">usize</span>,
     }
 
-    <span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>HashSlice</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-	<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>new</span>(<span class='ident'>hash</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='ident'>HashSlice</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-	    <span class='ident'>HashSlice</span> { <span class='ident'>bp</span>: <span class='ident'>hash</span>.<span class='ident'>as_bytes</span>(), <span class='ident'>len</span>: <span class='ident'>hash</span>.<span class='ident'>len</span>(), <span class='ident'>pos</span>: <span class='number'>0</span> }
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">HashSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">HashSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+	    <span class="ident">HashSlice</span> { <span class="ident">bp</span>: <span class="ident">hash</span>.<span class="ident">as_bytes</span>(), <span class="ident">len</span>: <span class="ident">hash</span>.<span class="ident">len</span>(), <span class="ident">pos</span>: <span class="number">0</span> }
 	}
     }
 
-    <span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>HashIterator</span> <span class='kw'>for</span> <span class='ident'>HashSlice</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-	<span class='kw'>type</span> <span class='ident'>Elem</span> <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span>;
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">HashIterator</span> <span class="kw">for</span> <span class="ident">HashSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+	<span class="kw">type</span> <span class="ident">Elem</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>;
 
-	<span class='kw'>fn</span> <span class='ident'>take</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>n</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>Self</span>::<span class='ident'>Elem</span><span class='op'>&gt;</span> {
-	    <span class='kw'>if</span> <span class='self'>self</span>.<span class='ident'>pos</span> <span class='op'>&gt;</span> <span class='self'>self</span>.<span class='ident'>len</span> {
-		<span class='kw'>return</span> <span class='prelude-val'>None</span>;
+	<span class="kw">fn</span> <span class="ident">take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Elem</span><span class="op">&gt;</span> {
+	    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pos</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">len</span> {
+		<span class="kw">return</span> <span class="prelude-val">None</span>;
 	    }
-	    <span class='kw'>let</span> <span class='ident'>sp</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>pos</span>;
-	    <span class='kw'>if</span> <span class='ident'>sp</span> <span class='op'>+</span> <span class='ident'>n</span> <span class='op'>&gt;</span> <span class='self'>self</span>.<span class='ident'>len</span> {
-		<span class='self'>self</span>.<span class='ident'>pos</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>len</span> <span class='op'>+</span> <span class='number'>1</span>;
-		<span class='prelude-val'>None</span>
-	    } <span class='kw'>else</span> {
-		<span class='kw'>let</span> <span class='ident'>endp</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>pos</span> <span class='op'>+</span> <span class='ident'>n</span>;
-		<span class='self'>self</span>.<span class='ident'>pos</span> <span class='op'>=</span> <span class='ident'>endp</span> <span class='op'>+</span> <span class='kw'>if</span> <span class='ident'>endp</span> <span class='op'>==</span> <span class='self'>self</span>.<span class='ident'>len</span> { <span class='number'>1</span> } <span class='kw'>else</span> { <span class='number'>0</span> };
-		<span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Ok</span>(<span class='ident'>s</span>) <span class='op'>=</span> <span class='ident'>str</span>::<span class='ident'>from_utf8</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>bp</span>[<span class='ident'>sp</span>..<span class='ident'>endp</span>]) {
-		    <span class='prelude-val'>Some</span>(<span class='ident'>s</span>)
-		} <span class='kw'>else</span> {
-		    <span class='prelude-val'>None</span>
+	    <span class="kw">let</span> <span class="ident">sp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pos</span>;
+	    <span class="kw">if</span> <span class="ident">sp</span> <span class="op">+</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">len</span> {
+		<span class="self">self</span>.<span class="ident">pos</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">len</span> <span class="op">+</span> <span class="number">1</span>;
+		<span class="prelude-val">None</span>
+	    } <span class="kw">else</span> {
+		<span class="kw">let</span> <span class="ident">endp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pos</span> <span class="op">+</span> <span class="ident">n</span>;
+		<span class="self">self</span>.<span class="ident">pos</span> <span class="op">=</span> <span class="ident">endp</span> <span class="op">+</span> <span class="kw">if</span> <span class="ident">endp</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">len</span> { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">0</span> };
+		<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">s</span>) <span class="op">=</span> <span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bp</span>[<span class="ident">sp</span>..<span class="ident">endp</span>]) {
+		    <span class="prelude-val">Some</span>(<span class="ident">s</span>)
+		} <span class="kw">else</span> {
+		    <span class="prelude-val">None</span>
 		}
 	    }
 	}
 
-	<span class='kw'>fn</span> <span class='ident'>take_until</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>ac</span>: <span class='ident'>u8</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>Self</span>::<span class='ident'>Elem</span><span class='op'>&gt;</span> {
-	    <span class='kw'>if</span> <span class='self'>self</span>.<span class='ident'>pos</span> <span class='op'>&gt;</span> <span class='self'>self</span>.<span class='ident'>len</span> {
-		<span class='kw'>return</span> <span class='prelude-val'>None</span>;
+	<span class="kw">fn</span> <span class="ident">take_until</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ac</span>: <span class="ident">u8</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Elem</span><span class="op">&gt;</span> {
+	    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pos</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">len</span> {
+		<span class="kw">return</span> <span class="prelude-val">None</span>;
 	    }
-	    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>sp</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>pos</span>;
-	    <span class='kw'>while</span> <span class='ident'>sp</span> <span class='op'>&lt;</span> <span class='self'>self</span>.<span class='ident'>len</span> {
-		<span class='kw'>if</span> <span class='self'>self</span>.<span class='ident'>bp</span>[<span class='ident'>sp</span>] <span class='op'>==</span> <span class='ident'>ac</span> {
-		    <span class='kw'>break</span>;
+	    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pos</span>;
+	    <span class="kw">while</span> <span class="ident">sp</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">len</span> {
+		<span class="kw">if</span> <span class="self">self</span>.<span class="ident">bp</span>[<span class="ident">sp</span>] <span class="op">==</span> <span class="ident">ac</span> {
+		    <span class="kw">break</span>;
 		}
-		<span class='ident'>sp</span> <span class='op'>+=</span> <span class='number'>1</span>;
+		<span class="ident">sp</span> <span class="op">+=</span> <span class="number">1</span>;
 	    }
-	    <span class='kw'>let</span> <span class='ident'>oldp</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>pos</span>;
-	    <span class='self'>self</span>.<span class='ident'>pos</span> <span class='op'>=</span> <span class='ident'>sp</span> <span class='op'>+</span> <span class='number'>1</span>;
-	    <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Ok</span>(<span class='ident'>s</span>) <span class='op'>=</span> <span class='ident'>str</span>::<span class='ident'>from_utf8</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>bp</span>[<span class='ident'>oldp</span>..<span class='ident'>sp</span>]) {
-		<span class='prelude-val'>Some</span>(<span class='ident'>s</span>)
-	    } <span class='kw'>else</span> {
-		<span class='prelude-val'>None</span>
+	    <span class="kw">let</span> <span class="ident">oldp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pos</span>;
+	    <span class="self">self</span>.<span class="ident">pos</span> <span class="op">=</span> <span class="ident">sp</span> <span class="op">+</span> <span class="number">1</span>;
+	    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">s</span>) <span class="op">=</span> <span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bp</span>[<span class="ident">oldp</span>..<span class="ident">sp</span>]) {
+		<span class="prelude-val">Some</span>(<span class="ident">s</span>)
+	    } <span class="kw">else</span> {
+		<span class="prelude-val">None</span>
 	    }
 	}
 
-	<span class='kw'>fn</span> <span class='ident'>at_end</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
-	    <span class='self'>self</span>.<span class='ident'>take</span>(<span class='number'>0</span>).<span class='ident'>unwrap_or</span>(<span class='string'>&quot;X&quot;</span>) <span class='op'>==</span> <span class='string'>&quot;X&quot;</span>
+	<span class="kw">fn</span> <span class="ident">at_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+	    <span class="self">self</span>.<span class="ident">take</span>(<span class="number">0</span>).<span class="ident">unwrap_or</span>(<span class="string">&quot;X&quot;</span>) <span class="op">==</span> <span class="string">&quot;X&quot;</span>
 	}
     }
 
-    <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
-    <span class='kw'>mod</span> <span class='ident'>tests</span> {
-	<span class='kw'>use</span> <span class='ident'>super</span>::{<span class='ident'>HashSlice</span>, <span class='ident'>HashIterator</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+    <span class="kw">mod</span> <span class="ident">tests</span> {
+	<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">HashSlice</span>, <span class="ident">HashIterator</span>};
 
-	<span class='attribute'>#[<span class='ident'>test</span>]</span>
-	<span class='kw'>fn</span> <span class='ident'>drain_string</span>() {
-	    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>hs</span> <span class='op'>=</span> <span class='ident'>HashSlice</span>::<span class='ident'>new</span>(<span class='string'>&quot;$2y$05$bvIG6Nmid91Mu9RcmmWZfO5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>take_until</span>(<span class='string'>b&#39;$&#39;</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>take_until</span>(<span class='string'>b&#39;$&#39;</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;2y&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>take_until</span>(<span class='string'>b&#39;$&#39;</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;05&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>take</span>(<span class='number'>22</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;bvIG6Nmid91Mu9RcmmWZfO&quot;</span>);
-	    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>hs1</span> <span class='op'>=</span> <span class='ident'>HashSlice</span> { <span class='ident'>bp</span>: <span class='ident'>hs</span>.<span class='ident'>bp</span>, <span class='ident'>pos</span>: <span class='ident'>hs</span>.<span class='ident'>pos</span>, <span class='ident'>len</span>: <span class='ident'>hs</span>.<span class='ident'>len</span> };
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>take_until</span>(<span class='string'>b&#39;$&#39;</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>at_end</span>(), <span class='boolval'>true</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs1</span>.<span class='ident'>take</span>(<span class='number'>31</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs1</span>.<span class='ident'>at_end</span>(), <span class='boolval'>true</span>);
+	<span class="attribute">#[<span class="ident">test</span>]</span>
+	<span class="kw">fn</span> <span class="ident">drain_string</span>() {
+	    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hs</span> <span class="op">=</span> <span class="ident">HashSlice</span>::<span class="ident">new</span>(<span class="string">&quot;$2y$05$bvIG6Nmid91Mu9RcmmWZfO5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">take_until</span>(<span class="string">b&#39;$&#39;</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">take_until</span>(<span class="string">b&#39;$&#39;</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;2y&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">take_until</span>(<span class="string">b&#39;$&#39;</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;05&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">take</span>(<span class="number">22</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;bvIG6Nmid91Mu9RcmmWZfO&quot;</span>);
+	    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hs1</span> <span class="op">=</span> <span class="ident">HashSlice</span> { <span class="ident">bp</span>: <span class="ident">hs</span>.<span class="ident">bp</span>, <span class="ident">pos</span>: <span class="ident">hs</span>.<span class="ident">pos</span>, <span class="ident">len</span>: <span class="ident">hs</span>.<span class="ident">len</span> };
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">take_until</span>(<span class="string">b&#39;$&#39;</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">at_end</span>(), <span class="bool-val">true</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs1</span>.<span class="ident">take</span>(<span class="number">31</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs1</span>.<span class="ident">at_end</span>(), <span class="bool-val">true</span>);
 	}
 
-	<span class='attribute'>#[<span class='ident'>test</span>]</span>
-	<span class='kw'>fn</span> <span class='ident'>empty_string</span>() {
-	    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>hs</span> <span class='op'>=</span> <span class='ident'>HashSlice</span>::<span class='ident'>new</span>(<span class='string'>&quot;&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>take_until</span>(<span class='string'>b&#39;$&#39;</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>at_end</span>(), <span class='boolval'>true</span>);
-	    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>hs</span> <span class='op'>=</span> <span class='ident'>HashSlice</span>::<span class='ident'>new</span>(<span class='string'>&quot;&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>at_end</span>(), <span class='boolval'>false</span>);
+	<span class="attribute">#[<span class="ident">test</span>]</span>
+	<span class="kw">fn</span> <span class="ident">empty_string</span>() {
+	    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hs</span> <span class="op">=</span> <span class="ident">HashSlice</span>::<span class="ident">new</span>(<span class="string">&quot;&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">take_until</span>(<span class="string">b&#39;$&#39;</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">at_end</span>(), <span class="bool-val">true</span>);
+	    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hs</span> <span class="op">=</span> <span class="ident">HashSlice</span>::<span class="ident">new</span>(<span class="string">&quot;&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">at_end</span>(), <span class="bool-val">false</span>);
 	}
 
-	<span class='attribute'>#[<span class='ident'>test</span>]</span>
-	<span class='kw'>fn</span> <span class='ident'>empty_elements</span>() {
-	    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>hs</span> <span class='op'>=</span> <span class='ident'>HashSlice</span>::<span class='ident'>new</span>(<span class='string'>&quot;$&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>take_until</span>(<span class='string'>b&#39;$&#39;</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>take_until</span>(<span class='string'>b&#39;$&#39;</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>at_end</span>(), <span class='boolval'>true</span>);
+	<span class="attribute">#[<span class="ident">test</span>]</span>
+	<span class="kw">fn</span> <span class="ident">empty_elements</span>() {
+	    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hs</span> <span class="op">=</span> <span class="ident">HashSlice</span>::<span class="ident">new</span>(<span class="string">&quot;$&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">take_until</span>(<span class="string">b&#39;$&#39;</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">take_until</span>(<span class="string">b&#39;$&#39;</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">at_end</span>(), <span class="bool-val">true</span>);
 	}
 
-	<span class='attribute'>#[<span class='ident'>test</span>]</span>
-	<span class='kw'>fn</span> <span class='ident'>combined_take</span>() {
-	    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>hs</span> <span class='op'>=</span> <span class='ident'>HashSlice</span>::<span class='ident'>new</span>(<span class='string'>&quot;$&quot;</span>);
-	    <span class='kw'>let</span> _ <span class='op'>=</span> <span class='ident'>hs</span>.<span class='ident'>take_until</span>(<span class='string'>b&#39;$&#39;</span>).<span class='ident'>unwrap</span>();
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>take_until</span>(<span class='string'>b&#39;$&#39;</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hs</span>.<span class='ident'>at_end</span>(), <span class='boolval'>true</span>);
+	<span class="attribute">#[<span class="ident">test</span>]</span>
+	<span class="kw">fn</span> <span class="ident">combined_take</span>() {
+	    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hs</span> <span class="op">=</span> <span class="ident">HashSlice</span>::<span class="ident">new</span>(<span class="string">&quot;$&quot;</span>);
+	    <span class="kw">let</span> _ <span class="op">=</span> <span class="ident">hs</span>.<span class="ident">take_until</span>(<span class="string">b&#39;$&#39;</span>).<span class="ident">unwrap</span>();
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">take_until</span>(<span class="string">b&#39;$&#39;</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">hs</span>.<span class="ident">at_end</span>(), <span class="bool-val">true</span>);
 	}
     }
 }
 
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>unix</span> {
-    <span class='doccomment'>//! Convenience functions for Unix modular hashes.</span>
-    <span class='doccomment'>//!</span>
-    <span class='doccomment'>//! If it&#39;s known that a hash is in one of the supported modular hash formats,</span>
-    <span class='doccomment'>//! the functions in this module can be used to verify or re-calculate the</span>
-    <span class='doccomment'>//! hash.</span>
-    <span class='kw'>use</span> <span class='ident'>super</span>::{<span class='prelude-ty'>Result</span>, <span class='ident'>consteq</span>};
-    <span class='kw'>use</span> <span class='ident'>parse</span>::{<span class='self'>self</span>, <span class='ident'>HashIterator</span>};
-    <span class='kw'>use</span> <span class='ident'>error</span>::<span class='ident'>Error</span>;
-    <span class='kw'>use</span> {<span class='ident'>bsdi_crypt</span>, <span class='ident'>md5_crypt</span>, <span class='ident'>bcrypt</span>, <span class='ident'>sha1_crypt</span>, <span class='ident'>sha256_crypt</span>, <span class='ident'>sha512_crypt</span>, <span class='ident'>unix_crypt</span>};
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">unix</span> {
+    <span class="doccomment">//! Convenience functions for Unix modular hashes.</span>
+    <span class="doccomment">//!</span>
+    <span class="doccomment">//! If it&#39;s known that a hash is in one of the supported modular hash formats,</span>
+    <span class="doccomment">//! the functions in this module can be used to verify or re-calculate the</span>
+    <span class="doccomment">//! hash.</span>
+    <span class="kw">use</span> <span class="kw">super</span>::{<span class="prelude-ty">Result</span>, <span class="ident">consteq</span>};
+    <span class="kw">use</span> <span class="ident">parse</span>::{<span class="self">self</span>, <span class="ident">HashIterator</span>};
+    <span class="kw">use</span> <span class="ident">error</span>::<span class="ident">Error</span>;
+    <span class="kw">use</span> {<span class="ident">bsdi_crypt</span>, <span class="ident">md5_crypt</span>, <span class="ident">bcrypt</span>, <span class="ident">sha1_crypt</span>, <span class="ident">sha256_crypt</span>, <span class="ident">sha512_crypt</span>, <span class="ident">unix_crypt</span>};
 
-    <span class='doccomment'>/// A Unix __crypt__(3) work-alike.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>crypt</span>(<span class='ident'>pass</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>, <span class='ident'>hash</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> {
-	<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>hs</span> <span class='op'>=</span> <span class='ident'>parse</span>::<span class='ident'>HashSlice</span>::<span class='ident'>new</span>(<span class='ident'>hash</span>);
-	<span class='kw'>match</span> <span class='ident'>hs</span>.<span class='ident'>take</span>(<span class='number'>1</span>).<span class='ident'>unwrap_or</span>(<span class='string'>&quot;X&quot;</span>) {
-	    <span class='string'>&quot;_&quot;</span> <span class='op'>=&gt;</span> <span class='ident'>bsdi_crypt</span>::<span class='ident'>hash_with</span>(<span class='ident'>hash</span>, <span class='ident'>pass</span>),
-	    <span class='string'>&quot;$&quot;</span> <span class='op'>=&gt;</span> <span class='kw'>match</span> <span class='ident'>hs</span>.<span class='ident'>take_until</span>(<span class='string'>b&#39;$&#39;</span>).<span class='ident'>unwrap_or</span>(<span class='string'>&quot;X&quot;</span>) {
-		<span class='string'>&quot;1&quot;</span> <span class='op'>=&gt;</span> <span class='ident'>md5_crypt</span>::<span class='ident'>hash_with</span>(<span class='ident'>hash</span>, <span class='ident'>pass</span>),
-		<span class='string'>&quot;2a&quot;</span> <span class='op'>|</span> <span class='string'>&quot;2b&quot;</span> <span class='op'>|</span> <span class='string'>&quot;2y&quot;</span> <span class='op'>=&gt;</span> <span class='ident'>bcrypt</span>::<span class='ident'>hash_with</span>(<span class='ident'>hash</span>, <span class='ident'>pass</span>),
-		<span class='string'>&quot;sha1&quot;</span> <span class='op'>=&gt;</span> <span class='ident'>sha1_crypt</span>::<span class='ident'>hash_with</span>(<span class='ident'>hash</span>, <span class='ident'>pass</span>),
-		<span class='string'>&quot;5&quot;</span> <span class='op'>=&gt;</span> <span class='ident'>sha256_crypt</span>::<span class='ident'>hash_with</span>(<span class='ident'>hash</span>, <span class='ident'>pass</span>),
-		<span class='string'>&quot;6&quot;</span> <span class='op'>=&gt;</span> <span class='ident'>sha512_crypt</span>::<span class='ident'>hash_with</span>(<span class='ident'>hash</span>, <span class='ident'>pass</span>),
-		_ <span class='op'>=&gt;</span> <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidHashString</span>)
+    <span class="doccomment">/// A Unix __crypt__(3) work-alike.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">crypt</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;&gt;</span>(<span class="ident">pass</span>: <span class="ident">B</span>, <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hs</span> <span class="op">=</span> <span class="ident">parse</span>::<span class="ident">HashSlice</span>::<span class="ident">new</span>(<span class="ident">hash</span>);
+	<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
+	<span class="kw">match</span> <span class="ident">hs</span>.<span class="ident">take</span>(<span class="number">1</span>).<span class="ident">unwrap_or</span>(<span class="string">&quot;X&quot;</span>) {
+	    <span class="string">&quot;_&quot;</span> <span class="op">=&gt;</span> <span class="ident">bsdi_crypt</span>::<span class="ident">hash_with</span>(<span class="ident">hash</span>, <span class="ident">pass</span>),
+	    <span class="string">&quot;$&quot;</span> <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">hs</span>.<span class="ident">take_until</span>(<span class="string">b&#39;$&#39;</span>).<span class="ident">unwrap_or</span>(<span class="string">&quot;X&quot;</span>) {
+		<span class="string">&quot;1&quot;</span> <span class="op">=&gt;</span> <span class="ident">md5_crypt</span>::<span class="ident">hash_with</span>(<span class="ident">hash</span>, <span class="ident">pass</span>),
+		<span class="string">&quot;2a&quot;</span> <span class="op">|</span> <span class="string">&quot;2b&quot;</span> <span class="op">|</span> <span class="string">&quot;2y&quot;</span> <span class="op">=&gt;</span> <span class="ident">bcrypt</span>::<span class="ident">hash_with</span>(<span class="ident">hash</span>, <span class="ident">pass</span>),
+		<span class="string">&quot;sha1&quot;</span> <span class="op">=&gt;</span> <span class="ident">sha1_crypt</span>::<span class="ident">hash_with</span>(<span class="ident">hash</span>, <span class="ident">pass</span>),
+		<span class="string">&quot;5&quot;</span> <span class="op">=&gt;</span> <span class="ident">sha256_crypt</span>::<span class="ident">hash_with</span>(<span class="ident">hash</span>, <span class="ident">pass</span>),
+		<span class="string">&quot;6&quot;</span> <span class="op">=&gt;</span> <span class="ident">sha512_crypt</span>::<span class="ident">hash_with</span>(<span class="ident">hash</span>, <span class="ident">pass</span>),
+		_ <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidHashString</span>)
 	    },
-	    _ <span class='op'>=&gt;</span> <span class='kw'>if</span> <span class='ident'>hash</span>.<span class='ident'>len</span>() <span class='op'>==</span> <span class='number'>13</span> {
-		<span class='ident'>unix_crypt</span>::<span class='ident'>hash_with</span>(<span class='ident'>hash</span>, <span class='ident'>pass</span>)
-	    } <span class='kw'>else</span> {
-		<span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidHashString</span>)
-	    }
+	    _ <span class="op">=&gt;</span> <span class="ident">unix_crypt</span>::<span class="ident">hash_with</span>(<span class="ident">hash</span>, <span class="ident">pass</span>)
 	}
     }
 
-    <span class='doccomment'>/// Verify that the hash corresponds to a password, using hash format recognition.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>verify</span>(<span class='ident'>pass</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>, <span class='ident'>hash</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
-	<span class='ident'>consteq</span>(<span class='ident'>hash</span>, <span class='ident'>crypt</span>(<span class='ident'>pass</span>, <span class='ident'>hash</span>))
+    <span class="doccomment">/// Verify that the hash corresponds to a password, using hash format recognition.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;&gt;</span>(<span class="ident">pass</span>: <span class="ident">B</span>, <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+	<span class="ident">consteq</span>(<span class="ident">hash</span>, <span class="ident">crypt</span>(<span class="ident">pass</span>, <span class="ident">hash</span>))
     }
 
-    <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
-    <span class='kw'>mod</span> <span class='ident'>tests</span> {
-	<span class='attribute'>#[<span class='ident'>test</span>]</span>
-	<span class='kw'>fn</span> <span class='ident'>crypt_recognized</span>() {
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>super</span>::<span class='ident'>crypt</span>(<span class='string'>&quot;password&quot;</span>, <span class='string'>&quot;$1$5pZSV9va$azfrPr6af3Fc7dLblQXVa0&quot;</span>).<span class='ident'>unwrap</span>(),
-		<span class='string'>&quot;$1$5pZSV9va$azfrPr6af3Fc7dLblQXVa0&quot;</span>);
-	    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>super</span>::<span class='ident'>crypt</span>(<span class='string'>&quot;test&quot;</span>, <span class='string'>&quot;aZGJuE6EXrjEE&quot;</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;aZGJuE6EXrjEE&quot;</span>);
-	}
-
-	<span class='attribute'>#[<span class='ident'>test</span>]</span>
-	<span class='attribute'>#[<span class='ident'>should_panic</span>(<span class='ident'>expected</span><span class='op'>=</span><span class='string'>&quot;value: InvalidHashString&quot;</span>)]</span>
-	<span class='kw'>fn</span> <span class='ident'>crypt_unrecognized</span>() {
-	    <span class='kw'>let</span> _ <span class='op'>=</span> <span class='ident'>super</span>::<span class='ident'>crypt</span>(<span class='string'>&quot;test&quot;</span>, <span class='string'>&quot;RZA/GZA&quot;</span>).<span class='ident'>unwrap</span>();
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+    <span class="kw">mod</span> <span class="ident">tests</span> {
+	<span class="attribute">#[<span class="ident">test</span>]</span>
+	<span class="kw">fn</span> <span class="ident">crypt_recognized</span>() {
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">super</span>::<span class="ident">crypt</span>(<span class="string">&quot;password&quot;</span>, <span class="string">&quot;$1$5pZSV9va$azfrPr6af3Fc7dLblQXVa0&quot;</span>).<span class="ident">unwrap</span>(),
+		<span class="string">&quot;$1$5pZSV9va$azfrPr6af3Fc7dLblQXVa0&quot;</span>);
+	    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">super</span>::<span class="ident">crypt</span>(<span class="string">&quot;test&quot;</span>, <span class="string">&quot;aZGJuE6EXrjEE&quot;</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;aZGJuE6EXrjEE&quot;</span>);
 	}
     }
 }
@@ -796,16 +855,22 @@
                 <h2>Keyboard Shortcuts</h2>
 
                 <dl>
-                    <dt>?</dt>
+                    <dt><kbd>?</kbd></dt>
                     <dd>Show this help dialog</dd>
-                    <dt>S</dt>
+                    <dt><kbd>S</kbd></dt>
                     <dd>Focus the search field</dd>
-                    <dt>&larrb;</dt>
+                    <dt><kbd>↑</kbd></dt>
                     <dd>Move up in search results</dd>
-                    <dt>&rarrb;</dt>
+                    <dt><kbd>↓</kbd></dt>
                     <dd>Move down in search results</dd>
-                    <dt>&#9166;</dt>
+                    <dt><kbd>↹</kbd></dt>
+                    <dd>Switch tab</dd>
+                    <dt><kbd>&#9166;</kbd></dt>
                     <dd>Go to active search result</dd>
+                    <dt><kbd>+</kbd></dt>
+                    <dd>Expand all sections</dd>
+                    <dt><kbd>-</kbd></dt>
+                    <dd>Collapse all sections</dd>
                 </dl>
             </div>
 
@@ -826,7 +891,7 @@
 
                 <p>
                     Search functions by type signature (e.g.
-                    <code>vec -> usize</code>)
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
                 </p>
             </div>
         </div>
@@ -837,11 +902,8 @@
     <script>
         window.rootPath = "../../";
         window.currentCrate = "pwhash";
-        window.playgroundUrl = "";
     </script>
-    <script src="../../jquery.js"></script>
     <script src="../../main.js"></script>
-    
     <script defer src="../../search-index.js"></script>
 </body>
 </html>

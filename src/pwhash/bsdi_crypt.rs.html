@@ -9,13 +9,18 @@
 
     <title>bsdi_crypt.rs.html -- source</title>
 
-    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
-    <link rel="stylesheet" type="text/css" href="../../main.css">
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle">
+    
+    <link rel="stylesheet" type="text/css" href="../../dark.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css" id="themeStyle">
+    <script src="../../storage.js"></script>
+    
 
     
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc source">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -26,10 +31,18 @@
     
 
     <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
         
         
     </nav>
 
+    <div class="theme-picker">
+        <button id="theme-picker" aria-label="Pick another theme!">
+            <img src="../../brush.svg" width="18" alt="Pick another theme!">
+        </button>
+        <div id="theme-choices"></div>
+    </div>
+    <script src="../../theme.js"></script>
     <nav class="sub">
         <form class="search-form js-only">
             <div class="search-container">
@@ -41,7 +54,7 @@
         </form>
     </nav>
 
-    <section id='main' class="content source"><pre class="line-numbers"><span id="1">  1</span>
+    <section id='main' class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -173,137 +186,151 @@
 <span id="130">130</span>
 <span id="131">131</span>
 <span id="132">132</span>
-</pre><pre class='rust '>
-<span class='doccomment'>//! Enhanced DES-based hash.</span>
-<span class='comment'>//</span>
-<span class='comment'>// Copyright (c) 2016 Ivan Nejgebauer &lt;inejge@gmail.com&gt;</span>
-<span class='comment'>//</span>
-<span class='comment'>// Licensed under the MIT license &lt;LICENSE-MIT or</span>
-<span class='comment'>// http://opensource.org/licenses/MIT&gt;. This file may not be copied,</span>
-<span class='comment'>// modified, or distributed except according to the terms of this</span>
-<span class='comment'>// license.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! This algorithm was developed by BSDi for BSD/OS as an extension of</span>
-<span class='doccomment'>//! the traditional Unix __crypt__(3). It supports longer passwords, larger</span>
-<span class='doccomment'>//! salt, and a variable number of rounds. Despite that, the algorithm</span>
-<span class='doccomment'>//! is considered weak and is not recommended for new passwords.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! # Example</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//! use pwhash::{bsdi_crypt, HashSetup};</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! assert_eq!(bsdi_crypt::hash_with(</span>
-<span class='doccomment'>//!         HashSetup { salt: Some(&quot;K0Ay&quot;), rounds: Some(7250) },</span>
-<span class='doccomment'>//!         &quot;password&quot;).unwrap(),</span>
-<span class='doccomment'>//!     &quot;_Gl/.K0Ay.aosctsbJ1k&quot;);</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! # Parameters</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * __Password length__: unlimited.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * __Salt length__: 4 characters (24 bits).</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * __Rounds__: 1 to 2&lt;sup&gt;24&lt;/sup&gt;-1. Default is 7250.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! # Hash Format</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! The format of the hash is __`_`__*`{rounds}{salt}{checksum}`*, where:</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * *`{rounds}`* is a 4-character Base64 encoding of the number of rounds.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * *`{salt}`* is a 4-character Base64 encoding of the salt.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * *`{checksum}`* is a 11-character Base64 encoding of the checksum.</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+</pre><pre class="rust ">
+<span class="doccomment">//! Enhanced DES-based hash.</span>
+<span class="comment">//</span>
+<span class="comment">// Copyright (c) 2016 Ivan Nejgebauer &lt;inejge@gmail.com&gt;</span>
+<span class="comment">//</span>
+<span class="comment">// Licensed under the MIT license &lt;LICENSE-MIT or</span>
+<span class="comment">// http://opensource.org/licenses/MIT&gt;. This file may not be copied,</span>
+<span class="comment">// modified, or distributed except according to the terms of this</span>
+<span class="comment">// license.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This algorithm was developed by BSDi for BSD/OS as an extension of</span>
+<span class="doccomment">//! the traditional Unix __crypt__(3). It supports longer passwords, larger</span>
+<span class="doccomment">//! salt, and a variable number of rounds. Despite that, the algorithm</span>
+<span class="doccomment">//! is considered weak and is not recommended for new passwords.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Example</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use pwhash::{bsdi_crypt, HashSetup};</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! assert_eq!(bsdi_crypt::hash_with(</span>
+<span class="doccomment">//!         HashSetup { salt: Some(&quot;K0Ay&quot;), rounds: Some(7250) },</span>
+<span class="doccomment">//!         &quot;password&quot;).unwrap(),</span>
+<span class="doccomment">//!     &quot;_Gl/.K0Ay.aosctsbJ1k&quot;);</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Parameters</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * __Password length__: unlimited.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * __Salt length__: 4 characters (24 bits).</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * __Rounds__: 1 to 2&lt;sup&gt;24&lt;/sup&gt;-1. Default is 7250.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Hash Format</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The format of the hash is __`_`__*`{rounds}{salt}{checksum}`*, where:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * *`{rounds}`* is a 4-character Base64 encoding of the number of rounds.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * *`{salt}`* is a 4-character Base64 encoding of the salt.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * *`{checksum}`* is a 11-character Base64 encoding of the checksum.</span>
 
-<span class='kw'>use</span> <span class='ident'>super</span>::{<span class='prelude-ty'>Result</span>, <span class='ident'>HashSetup</span>, <span class='ident'>IntoHashSetup</span>, <span class='ident'>consteq</span>};
-<span class='kw'>use</span> <span class='ident'>des_crypt</span>::<span class='ident'>bsdi_crypt</span>;
-<span class='kw'>use</span> <span class='ident'>enc_dec</span>::<span class='ident'>decode_val</span>;
-<span class='kw'>use</span> <span class='ident'>error</span>::<span class='ident'>Error</span>;
-<span class='kw'>use</span> <span class='ident'>random</span>;
-<span class='kw'>use</span> <span class='ident'>parse</span>::{<span class='self'>self</span>, <span class='ident'>HashIterator</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="prelude-ty">Result</span>, <span class="ident">HashSetup</span>, <span class="ident">IntoHashSetup</span>, <span class="ident">consteq</span>};
+<span class="kw">use</span> <span class="ident">des_crypt</span>::<span class="ident">bsdi_crypt</span>;
+<span class="kw">use</span> <span class="ident">enc_dec</span>::<span class="ident">decode_val</span>;
+<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">random</span>;
+<span class="kw">use</span> <span class="ident">parse</span>::{<span class="self">self</span>, <span class="ident">HashIterator</span>};
 
-<span class='kw'>const</span> <span class='ident'>MIN_ROUNDS</span>: <span class='ident'>u32</span> <span class='op'>=</span> <span class='number'>1</span>;
-<span class='kw'>const</span> <span class='ident'>MAX_ROUNDS</span>: <span class='ident'>u32</span> <span class='op'>=</span> (<span class='number'>1</span> <span class='op'>&lt;&lt;</span> <span class='number'>24</span>) <span class='op'>-</span> <span class='number'>1</span>;
-<span class='doccomment'>/// Default number of rounds.</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// The value is aligned with the default used on NetBSD.</span>
-<span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>DEFAULT_ROUNDS</span>: <span class='ident'>u32</span> <span class='op'>=</span> <span class='number'>7250</span>;
-<span class='doccomment'>/// Salt length.</span>
-<span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>SALT_LEN</span>: <span class='ident'>usize</span> <span class='op'>=</span> <span class='number'>4</span>;
-<span class='kw'>const</span> <span class='ident'>ROUNDS_LEN</span>: <span class='ident'>usize</span> <span class='op'>=</span> <span class='number'>4</span>;
+<span class="kw">const</span> <span class="ident">MIN_ROUNDS</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
+<span class="kw">const</span> <span class="ident">MAX_ROUNDS</span>: <span class="ident">u32</span> <span class="op">=</span> (<span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="number">24</span>) <span class="op">-</span> <span class="number">1</span>;
+<span class="doccomment">/// Default number of rounds.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The value is aligned with the default used on NetBSD.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_ROUNDS</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">7250</span>;
+<span class="doccomment">/// Salt length.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SALT_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
+<span class="kw">const</span> <span class="ident">ROUNDS_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
 
-<span class='doccomment'>/// Hash a password with a randomly generated salt and the default</span>
-<span class='doccomment'>/// number of rounds.</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// An error is returned if the system random number generator cannot</span>
-<span class='doccomment'>/// be opened.</span>
-<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>hash</span>(<span class='ident'>pass</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> {
-    <span class='kw'>let</span> <span class='ident'>saltstr</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>random</span>::<span class='ident'>gen_salt_str</span>(<span class='ident'>SALT_LEN</span>));
-    <span class='ident'>bsdi_crypt</span>(<span class='ident'>pass</span>, <span class='kw-2'>&amp;</span><span class='ident'>saltstr</span>, <span class='ident'>DEFAULT_ROUNDS</span>)
+<span class="doccomment">/// Hash a password with a randomly generated salt and the default</span>
+<span class="doccomment">/// number of rounds.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// An error is returned if the system random number generator cannot</span>
+<span class="doccomment">/// be opened.</span>
+<span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span><span class="op">=</span><span class="string">&quot;0.2.0&quot;</span>, <span class="ident">note</span><span class="op">=</span><span class="string">&quot;don&#39;t use this algorithm for new passwords&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;&gt;</span>(<span class="ident">pass</span>: <span class="ident">B</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">saltstr</span> <span class="op">=</span> <span class="ident">random</span>::<span class="ident">gen_salt_str</span>(<span class="ident">SALT_LEN</span>)<span class="question-mark">?</span>;
+    <span class="ident">bsdi_crypt</span>(<span class="ident">pass</span>.<span class="ident">as_ref</span>(), <span class="kw-2">&amp;</span><span class="ident">saltstr</span>, <span class="ident">DEFAULT_ROUNDS</span>)
 }
 
-<span class='kw'>fn</span> <span class='ident'>parse_bsdi_hash</span>(<span class='ident'>hash</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>HashSetup</span><span class='op'>&gt;</span> {
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>hs</span> <span class='op'>=</span> <span class='ident'>parse</span>::<span class='ident'>HashSlice</span>::<span class='ident'>new</span>(<span class='ident'>hash</span>);
-    <span class='kw'>if</span> <span class='ident'>hs</span>.<span class='ident'>take</span>(<span class='number'>1</span>).<span class='ident'>unwrap_or</span>(<span class='string'>&quot;X&quot;</span>) <span class='op'>!=</span> <span class='string'>&quot;_&quot;</span> {
-	<span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidHashString</span>);
+<span class="kw">fn</span> <span class="ident">parse_bsdi_hash</span>(<span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSetup</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hs</span> <span class="op">=</span> <span class="ident">parse</span>::<span class="ident">HashSlice</span>::<span class="ident">new</span>(<span class="ident">hash</span>);
+    <span class="kw">if</span> <span class="ident">hs</span>.<span class="ident">take</span>(<span class="number">1</span>).<span class="ident">unwrap_or</span>(<span class="string">&quot;X&quot;</span>) <span class="op">!=</span> <span class="string">&quot;_&quot;</span> {
+	<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidHashString</span>);
     }
-    <span class='kw'>let</span> <span class='ident'>rounds</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>rounds_enc</span>) <span class='op'>=</span> <span class='ident'>hs</span>.<span class='ident'>take</span>(<span class='ident'>ROUNDS_LEN</span>) {
-	<span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>decode_val</span>(<span class='ident'>rounds_enc</span>, <span class='ident'>SALT_LEN</span>))
-    } <span class='kw'>else</span> {
-	<span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidHashString</span>);
+    <span class="kw">let</span> <span class="ident">rounds</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">rounds_enc</span>) <span class="op">=</span> <span class="ident">hs</span>.<span class="ident">take</span>(<span class="ident">ROUNDS_LEN</span>) {
+	<span class="ident">decode_val</span>(<span class="ident">rounds_enc</span>, <span class="ident">SALT_LEN</span>)<span class="question-mark">?</span>
+    } <span class="kw">else</span> {
+	<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidHashString</span>);
     };
-    <span class='kw'>let</span> <span class='ident'>salt</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>salt</span>) <span class='op'>=</span> <span class='ident'>hs</span>.<span class='ident'>take</span>(<span class='ident'>SALT_LEN</span>) {
-	<span class='ident'>salt</span>
-    } <span class='kw'>else</span> {
-	<span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidHashString</span>);
+    <span class="kw">let</span> <span class="ident">salt</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">salt</span>) <span class="op">=</span> <span class="ident">hs</span>.<span class="ident">take</span>(<span class="ident">SALT_LEN</span>) {
+	<span class="ident">salt</span>
+    } <span class="kw">else</span> {
+	<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidHashString</span>);
     };
-    <span class='prelude-val'>Ok</span>(<span class='ident'>HashSetup</span> { <span class='ident'>salt</span>: <span class='prelude-val'>Some</span>(<span class='ident'>salt</span>), <span class='ident'>rounds</span>: <span class='prelude-val'>Some</span>(<span class='ident'>rounds</span>) })
+    <span class="prelude-val">Ok</span>(<span class="ident">HashSetup</span> { <span class="ident">salt</span>: <span class="prelude-val">Some</span>(<span class="ident">salt</span>), <span class="ident">rounds</span>: <span class="prelude-val">Some</span>(<span class="ident">rounds</span>) })
 }
 
-<span class='doccomment'>/// Hash a password with user-provided parameters.</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// If the `param` argument is a `&amp;str`, it must be in the final hash</span>
-<span class='doccomment'>/// format. The number of rounds and the salt are parsed out of that value.</span>
-<span class='doccomment'>/// An error is returned if the salt is too short or contains an invalid</span>
-<span class='doccomment'>/// character. An out-of-range rounds value will also result in an error.</span>
-<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>hash_with</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>IHS</span><span class='op'>&gt;</span>(<span class='ident'>param</span>: <span class='ident'>IHS</span>, <span class='ident'>pass</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>IHS</span>: <span class='ident'>IntoHashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-    <span class='kw'>let</span> <span class='ident'>hs</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>IHS</span>::<span class='ident'>into_hash_setup</span>(<span class='ident'>param</span>, <span class='ident'>parse_bsdi_hash</span>));
-    <span class='kw'>let</span> <span class='ident'>rounds</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>r</span>) <span class='op'>=</span> <span class='ident'>hs</span>.<span class='ident'>rounds</span> {
-	<span class='kw'>if</span> <span class='ident'>r</span> <span class='op'>&lt;</span> <span class='ident'>MIN_ROUNDS</span> <span class='op'>||</span> <span class='ident'>r</span> <span class='op'>&gt;</span> <span class='ident'>MAX_ROUNDS</span> {
-	    <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidRounds</span>);
+<span class="doccomment">/// Hash a password with user-provided parameters.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// If the `param` argument is a `&amp;str`, it must be in the final hash</span>
+<span class="doccomment">/// format. The number of rounds and the salt are parsed out of that value.</span>
+<span class="doccomment">/// An error is returned if the salt is too short or contains an invalid</span>
+<span class="doccomment">/// character. An out-of-range rounds value will also result in an error.</span>
+<span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span><span class="op">=</span><span class="string">&quot;0.2.0&quot;</span>, <span class="ident">note</span><span class="op">=</span><span class="string">&quot;don&#39;t use this algorithm for new passwords&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash_with</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">IHS</span>, <span class="ident">B</span><span class="op">&gt;</span>(<span class="ident">param</span>: <span class="ident">IHS</span>, <span class="ident">pass</span>: <span class="ident">B</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>
+    <span class="kw">where</span> <span class="ident">IHS</span>: <span class="ident">IntoHashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>
+{
+    <span class="kw">let</span> <span class="ident">hs</span> <span class="op">=</span> <span class="ident">IHS</span>::<span class="ident">into_hash_setup</span>(<span class="ident">param</span>, <span class="ident">parse_bsdi_hash</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">rounds</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">r</span>) <span class="op">=</span> <span class="ident">hs</span>.<span class="ident">rounds</span> {
+	<span class="kw">if</span> <span class="ident">r</span> <span class="op">&lt;</span> <span class="ident">MIN_ROUNDS</span> <span class="op">||</span> <span class="ident">r</span> <span class="op">&gt;</span> <span class="ident">MAX_ROUNDS</span> {
+	    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidRounds</span>);
 	}
-	<span class='ident'>r</span>
-    } <span class='kw'>else</span> { <span class='ident'>DEFAULT_ROUNDS</span> };
-    <span class='kw'>if</span> <span class='ident'>hs</span>.<span class='ident'>salt</span>.<span class='ident'>is_some</span>() {
-	<span class='ident'>bsdi_crypt</span>(<span class='ident'>pass</span>, <span class='ident'>hs</span>.<span class='ident'>salt</span>.<span class='ident'>unwrap</span>(), <span class='ident'>rounds</span>)
-    } <span class='kw'>else</span> {
-	<span class='kw'>let</span> <span class='ident'>saltstr</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>random</span>::<span class='ident'>gen_salt_str</span>(<span class='ident'>SALT_LEN</span>));
-	<span class='ident'>bsdi_crypt</span>(<span class='ident'>pass</span>, <span class='kw-2'>&amp;</span><span class='ident'>saltstr</span>, <span class='ident'>rounds</span>)
+	<span class="ident">r</span>
+    } <span class="kw">else</span> { <span class="ident">DEFAULT_ROUNDS</span> };
+    <span class="kw">if</span> <span class="ident">hs</span>.<span class="ident">salt</span>.<span class="ident">is_some</span>() {
+	<span class="ident">bsdi_crypt</span>(<span class="ident">pass</span>.<span class="ident">as_ref</span>(), <span class="ident">hs</span>.<span class="ident">salt</span>.<span class="ident">unwrap</span>(), <span class="ident">rounds</span>)
+    } <span class="kw">else</span> {
+	<span class="kw">let</span> <span class="ident">saltstr</span> <span class="op">=</span> <span class="ident">random</span>::<span class="ident">gen_salt_str</span>(<span class="ident">SALT_LEN</span>)<span class="question-mark">?</span>;
+	<span class="ident">bsdi_crypt</span>(<span class="ident">pass</span>.<span class="ident">as_ref</span>(), <span class="kw-2">&amp;</span><span class="ident">saltstr</span>, <span class="ident">rounds</span>)
     }
 }
 
-<span class='doccomment'>/// Verify that the hash corresponds to a password.</span>
-<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>verify</span>(<span class='ident'>pass</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>, <span class='ident'>hash</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
-    <span class='ident'>consteq</span>(<span class='ident'>hash</span>, <span class='ident'>hash_with</span>(<span class='ident'>hash</span>, <span class='ident'>pass</span>))
+<span class="doccomment">/// Verify that the hash corresponds to a password.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;&gt;</span>(<span class="ident">pass</span>: <span class="ident">B</span>, <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
+    <span class="ident">consteq</span>(<span class="ident">hash</span>, <span class="ident">hash_with</span>(<span class="ident">hash</span>, <span class="ident">pass</span>))
 }
 
-<span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
-<span class='kw'>mod</span> <span class='ident'>tests</span> {
-    <span class='kw'>use</span> ::<span class='ident'>HashSetup</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> ::<span class="ident">HashSetup</span>;
 
-    <span class='attribute'>#[<span class='ident'>test</span>]</span>
-    <span class='kw'>fn</span> <span class='ident'>custom</span>() {
-	<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>super</span>::<span class='ident'>hash_with</span>(<span class='ident'>HashSetup</span> { <span class='ident'>salt</span>: <span class='prelude-val'>Some</span>(<span class='string'>&quot;K0Ay&quot;</span>), <span class='ident'>rounds</span>: <span class='prelude-val'>None</span> }, <span class='string'>&quot;password&quot;</span>).<span class='ident'>unwrap</span>(),
-	    <span class='string'>&quot;_Gl/.K0Ay.aosctsbJ1k&quot;</span>);
-	<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>super</span>::<span class='ident'>hash_with</span>(<span class='string'>&quot;_Gl/.K0Ay.aosctsbJ1k&quot;</span>, <span class='string'>&quot;password&quot;</span>).<span class='ident'>unwrap</span>(), <span class='string'>&quot;_Gl/.K0Ay.aosctsbJ1k&quot;</span>);
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">custom</span>() {
+	<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">super</span>::<span class="ident">hash_with</span>(<span class="ident">HashSetup</span> { <span class="ident">salt</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;K0Ay&quot;</span>), <span class="ident">rounds</span>: <span class="prelude-val">None</span> }, <span class="string">&quot;password&quot;</span>).<span class="ident">unwrap</span>(),
+	    <span class="string">&quot;_Gl/.K0Ay.aosctsbJ1k&quot;</span>);
+	<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">super</span>::<span class="ident">hash_with</span>(<span class="string">&quot;_Gl/.K0Ay.aosctsbJ1k&quot;</span>, <span class="string">&quot;password&quot;</span>).<span class="ident">unwrap</span>(), <span class="string">&quot;_Gl/.K0Ay.aosctsbJ1k&quot;</span>);
     }
 
-    <span class='attribute'>#[<span class='ident'>test</span>]</span>
-    <span class='attribute'>#[<span class='ident'>should_panic</span>(<span class='ident'>expected</span><span class='op'>=</span><span class='string'>&quot;value: InvalidRounds&quot;</span>)]</span>
-    <span class='kw'>fn</span> <span class='ident'>bad_rounds</span>() {
-	<span class='kw'>let</span> _ <span class='op'>=</span> <span class='ident'>super</span>::<span class='ident'>hash_with</span>(<span class='ident'>HashSetup</span> { <span class='ident'>salt</span>: <span class='prelude-val'>Some</span>(<span class='string'>&quot;K0Ay&quot;</span>), <span class='ident'>rounds</span>: <span class='prelude-val'>Some</span>(<span class='number'>0</span>) }, <span class='string'>&quot;password&quot;</span>).<span class='ident'>unwrap</span>();
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
+    <span class="attribute">#[<span class="ident">should_panic</span>(<span class="ident">expected</span><span class="op">=</span><span class="string">&quot;value: InvalidRounds&quot;</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">bad_rounds</span>() {
+	<span class="kw">let</span> _ <span class="op">=</span> <span class="kw">super</span>::<span class="ident">hash_with</span>(<span class="ident">HashSetup</span> { <span class="ident">salt</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;K0Ay&quot;</span>), <span class="ident">rounds</span>: <span class="prelude-val">Some</span>(<span class="number">0</span>) }, <span class="string">&quot;password&quot;</span>).<span class="ident">unwrap</span>();
     }
 }
 </pre>
@@ -320,16 +347,22 @@
                 <h2>Keyboard Shortcuts</h2>
 
                 <dl>
-                    <dt>?</dt>
+                    <dt><kbd>?</kbd></dt>
                     <dd>Show this help dialog</dd>
-                    <dt>S</dt>
+                    <dt><kbd>S</kbd></dt>
                     <dd>Focus the search field</dd>
-                    <dt>&larrb;</dt>
+                    <dt><kbd>↑</kbd></dt>
                     <dd>Move up in search results</dd>
-                    <dt>&rarrb;</dt>
+                    <dt><kbd>↓</kbd></dt>
                     <dd>Move down in search results</dd>
-                    <dt>&#9166;</dt>
+                    <dt><kbd>↹</kbd></dt>
+                    <dd>Switch tab</dd>
+                    <dt><kbd>&#9166;</kbd></dt>
                     <dd>Go to active search result</dd>
+                    <dt><kbd>+</kbd></dt>
+                    <dd>Expand all sections</dd>
+                    <dt><kbd>-</kbd></dt>
+                    <dd>Collapse all sections</dd>
                 </dl>
             </div>
 
@@ -350,7 +383,7 @@
 
                 <p>
                     Search functions by type signature (e.g.
-                    <code>vec -> usize</code>)
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
                 </p>
             </div>
         </div>
@@ -361,11 +394,8 @@
     <script>
         window.rootPath = "../../";
         window.currentCrate = "pwhash";
-        window.playgroundUrl = "";
     </script>
-    <script src="../../jquery.js"></script>
     <script src="../../main.js"></script>
-    
     <script defer src="../../search-index.js"></script>
 </body>
 </html>

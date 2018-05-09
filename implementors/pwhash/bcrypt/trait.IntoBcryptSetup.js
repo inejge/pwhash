@@ -1,5 +1,5 @@
 (function() {var implementors = {};
-implementors['pwhash'] = [];
+implementors["pwhash"] = [];
 
             if (window.register_implementors) {
                 window.register_implementors(implementors);

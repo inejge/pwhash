@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["crypt","A Unix __crypt__(3) work-alike."],["verify","Verify that the hash corresponds to a password, using hash format recognition."]]});
+initSidebarItems({"fn":[["crypt","A Unix crypt(3) work-alike."],["verify","Verify that the hash corresponds to a password, using hash format recognition."]]});

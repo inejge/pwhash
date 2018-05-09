@@ -9,13 +9,18 @@
 
     <title>pwhash::bsdi_crypt - Rust</title>
 
-    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
-    <link rel="stylesheet" type="text/css" href="../../main.css">
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle">
+    
+    <link rel="stylesheet" type="text/css" href="../../dark.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css" id="themeStyle">
+    <script src="../../storage.js"></script>
+    
 
     
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc mod">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -26,10 +31,18 @@
     
 
     <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
         
-        <p class='location'><a href='../index.html'>pwhash</a></p><script>window.sidebarCurrent = {name: 'bsdi_crypt', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+        <p class='location'>Module bsdi_crypt</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#constants">Constants</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'><a href='../index.html'>pwhash</a></p><script>window.sidebarCurrent = {name: 'bsdi_crypt', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script></div>
     </nav>
 
+    <div class="theme-picker">
+        <button id="theme-picker" aria-label="Pick another theme!">
+            <img src="../../brush.svg" width="18" alt="Pick another theme!">
+        </button>
+        <div id="theme-choices"></div>
+    </div>
+    <script src="../../theme.js"></script>
     <nav class="sub">
         <form class="search-form js-only">
             <div class="search-container">
@@ -41,91 +54,94 @@
         </form>
     </nav>
 
-    <section id='main' class="content mod">
-<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>pwhash</a>::<wbr><a class='mod' href=''>bsdi_crypt</a></span><span class='out-of-band'><span id='render-detail'>
-            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
-                [<span class='inner'>&#x2212;</span>]
-            </a>
-        </span><a id='src-148' class='srclink' href='../../src/pwhash/bsdi_crypt.rs.html#1-132' title='goto source code'>[src]</a></span></h1>
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>pwhash</a>::<wbr><a class="mod" href=''>bsdi_crypt</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/pwhash/bsdi_crypt.rs.html#1-139' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>Enhanced DES-based hash.</p>
-
 <p>This algorithm was developed by BSDi for BSD/OS as an extension of
 the traditional Unix <strong>crypt</strong>(3). It supports longer passwords, larger
 salt, and a variable number of rounds. Despite that, the algorithm
 is considered weak and is not recommended for new passwords.</p>
+<h1 id="example" class="section-header"><a href="#example">Example</a></h1>
+<pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">pwhash</span>::{<span class="ident">bsdi_crypt</span>, <span class="ident">HashSetup</span>};
 
-<h1 id='example' class='section-header'><a href='#example'>Example</a></h1><pre class='rust rust-example-rendered'>
-<span class='kw'>use</span> <span class='ident'>pwhash</span>::{<span class='ident'>bsdi_crypt</span>, <span class='ident'>HashSetup</span>};
-
-<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>bsdi_crypt</span>::<span class='ident'>hash_with</span>(
-        <span class='ident'>HashSetup</span> { <span class='ident'>salt</span>: <span class='prelude-val'>Some</span>(<span class='string'>&quot;K0Ay&quot;</span>), <span class='ident'>rounds</span>: <span class='prelude-val'>Some</span>(<span class='number'>7250</span>) },
-        <span class='string'>&quot;password&quot;</span>).<span class='ident'>unwrap</span>(),
-    <span class='string'>&quot;_Gl/.K0Ay.aosctsbJ1k&quot;</span>);</pre>
-
-<h1 id='parameters' class='section-header'><a href='#parameters'>Parameters</a></h1>
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">bsdi_crypt</span>::<span class="ident">hash_with</span>(
+        <span class="ident">HashSetup</span> { <span class="ident">salt</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;K0Ay&quot;</span>), <span class="ident">rounds</span>: <span class="prelude-val">Some</span>(<span class="number">7250</span>) },
+        <span class="string">&quot;password&quot;</span>).<span class="ident">unwrap</span>(),
+    <span class="string">&quot;_Gl/.K0Ay.aosctsbJ1k&quot;</span>);</pre>
+<h1 id="parameters" class="section-header"><a href="#parameters">Parameters</a></h1>
 <ul>
-<li><p><strong>Password length</strong>: unlimited.</p></li>
-<li><p><strong>Salt length</strong>: 4 characters (24 bits).</p></li>
-<li><p><strong>Rounds</strong>: 1 to 2<sup>24</sup>-1. Default is 7250.</p></li>
+<li>
+<p><strong>Password length</strong>: unlimited.</p>
+</li>
+<li>
+<p><strong>Salt length</strong>: 4 characters (24 bits).</p>
+</li>
+<li>
+<p><strong>Rounds</strong>: 1 to 2<sup>24</sup>-1. Default is 7250.</p>
+</li>
 </ul>
-
-<h1 id='hash-format' class='section-header'><a href='#hash-format'>Hash Format</a></h1>
+<h1 id="hash-format" class="section-header"><a href="#hash-format">Hash Format</a></h1>
 <p>The format of the hash is <strong><code>_</code></strong><em><code>{rounds}{salt}{checksum}</code></em>, where:</p>
-
 <ul>
-<li><p><em><code>{rounds}</code></em> is a 4-character Base64 encoding of the number of rounds.</p></li>
-<li><p><em><code>{salt}</code></em> is a 4-character Base64 encoding of the salt.</p></li>
-<li><p><em><code>{checksum}</code></em> is a 11-character Base64 encoding of the checksum.</p></li>
+<li>
+<p><em><code>{rounds}</code></em> is a 4-character Base64 encoding of the number of rounds.</p>
+</li>
+<li>
+<p><em><code>{salt}</code></em> is a 4-character Base64 encoding of the salt.</p>
+</li>
+<li>
+<p><em><code>{checksum}</code></em> is a 11-character Base64 encoding of the checksum.</p>
+</li>
 </ul>
 </div><h2 id='constants' class='section-header'><a href="#constants">Constants</a></h2>
 <table>
-                    <tr class=' module-item'>
-                        <td><a class='constant' href='constant.DEFAULT_ROUNDS.html'
-                               title='pwhash::bsdi_crypt::DEFAULT_ROUNDS'>DEFAULT_ROUNDS</a></td>
-                        <td class='docblock short'>
-                             <p>Default number of rounds.</p>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.DEFAULT_ROUNDS.html"
+                                  title='constant pwhash::bsdi_crypt::DEFAULT_ROUNDS'>DEFAULT_ROUNDS</a></td>
+                           <td class='docblock-short'>
+                                <p>Default number of rounds.</p>
 
-                        </td>
-                    </tr>
-                
-                    <tr class=' module-item'>
-                        <td><a class='constant' href='constant.SALT_LEN.html'
-                               title='pwhash::bsdi_crypt::SALT_LEN'>SALT_LEN</a></td>
-                        <td class='docblock short'>
-                             <p>Salt length.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.SALT_LEN.html"
+                                  title='constant pwhash::bsdi_crypt::SALT_LEN'>SALT_LEN</a></td>
+                           <td class='docblock-short'>
+                                <p>Salt length.</p>
 
-                        </td>
-                    </tr>
-                </table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+                           </td>
+                       </tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
 <table>
-                    <tr class=' module-item'>
-                        <td><a class='fn' href='fn.hash.html'
-                               title='pwhash::bsdi_crypt::hash'>hash</a></td>
-                        <td class='docblock short'>
-                             <p>Hash a password with a randomly generated salt and the default
+                       <tr class=' module-item'>
+                           <td><a class="fn" href="fn.hash.html"
+                                  title='fn pwhash::bsdi_crypt::hash'>hash</a></td>
+                           <td class='docblock-short'>
+                               [<div class='stab deprecated'>Deprecated</div>] <p>Hash a password with a randomly generated salt and the default
 number of rounds.</p>
 
-                        </td>
-                    </tr>
-                
-                    <tr class=' module-item'>
-                        <td><a class='fn' href='fn.hash_with.html'
-                               title='pwhash::bsdi_crypt::hash_with'>hash_with</a></td>
-                        <td class='docblock short'>
-                             <p>Hash a password with user-provided parameters.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="fn" href="fn.hash_with.html"
+                                  title='fn pwhash::bsdi_crypt::hash_with'>hash_with</a></td>
+                           <td class='docblock-short'>
+                               [<div class='stab deprecated'>Deprecated</div>] <p>Hash a password with user-provided parameters.</p>
 
-                        </td>
-                    </tr>
-                
-                    <tr class=' module-item'>
-                        <td><a class='fn' href='fn.verify.html'
-                               title='pwhash::bsdi_crypt::verify'>verify</a></td>
-                        <td class='docblock short'>
-                             <p>Verify that the hash corresponds to a password.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="fn" href="fn.verify.html"
+                                  title='fn pwhash::bsdi_crypt::verify'>verify</a></td>
+                           <td class='docblock-short'>
+                                <p>Verify that the hash corresponds to a password.</p>
 
-                        </td>
-                    </tr>
-                </table></section>
+                           </td>
+                       </tr></table></section>
     <section id='search' class="content hidden"></section>
 
     <section class="footer"></section>
@@ -138,16 +154,22 @@ number of rounds.</p>
                 <h2>Keyboard Shortcuts</h2>
 
                 <dl>
-                    <dt>?</dt>
+                    <dt><kbd>?</kbd></dt>
                     <dd>Show this help dialog</dd>
-                    <dt>S</dt>
+                    <dt><kbd>S</kbd></dt>
                     <dd>Focus the search field</dd>
-                    <dt>&larrb;</dt>
+                    <dt><kbd>↑</kbd></dt>
                     <dd>Move up in search results</dd>
-                    <dt>&rarrb;</dt>
+                    <dt><kbd>↓</kbd></dt>
                     <dd>Move down in search results</dd>
-                    <dt>&#9166;</dt>
+                    <dt><kbd>↹</kbd></dt>
+                    <dd>Switch tab</dd>
+                    <dt><kbd>&#9166;</kbd></dt>
                     <dd>Go to active search result</dd>
+                    <dt><kbd>+</kbd></dt>
+                    <dd>Expand all sections</dd>
+                    <dt><kbd>-</kbd></dt>
+                    <dd>Collapse all sections</dd>
                 </dl>
             </div>
 
@@ -168,7 +190,7 @@ number of rounds.</p>
 
                 <p>
                     Search functions by type signature (e.g.
-                    <code>vec -> usize</code>)
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
                 </p>
             </div>
         </div>
@@ -179,11 +201,8 @@ number of rounds.</p>
     <script>
         window.rootPath = "../../";
         window.currentCrate = "pwhash";
-        window.playgroundUrl = "";
     </script>
-    <script src="../../jquery.js"></script>
     <script src="../../main.js"></script>
-    
     <script defer src="../../search-index.js"></script>
 </body>
 </html>

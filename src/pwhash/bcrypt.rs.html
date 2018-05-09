@@ -9,13 +9,18 @@
 
     <title>bcrypt.rs.html -- source</title>
 
-    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
-    <link rel="stylesheet" type="text/css" href="../../main.css">
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle">
+    
+    <link rel="stylesheet" type="text/css" href="../../dark.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css" id="themeStyle">
+    <script src="../../storage.js"></script>
+    
 
     
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc source">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -26,10 +31,18 @@
     
 
     <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
         
         
     </nav>
 
+    <div class="theme-picker">
+        <button id="theme-picker" aria-label="Pick another theme!">
+            <img src="../../brush.svg" width="18" alt="Pick another theme!">
+        </button>
+        <div id="theme-choices"></div>
+    </div>
+    <script src="../../theme.js"></script>
     <nav class="sub">
         <form class="search-form js-only">
             <div class="search-container">
@@ -41,7 +54,7 @@
         </form>
     </nav>
 
-    <section id='main' class="content source"><pre class="line-numbers"><span id="1">  1</span>
+    <section id='main' class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -313,277 +326,281 @@
 <span id="270">270</span>
 <span id="271">271</span>
 <span id="272">272</span>
-</pre><pre class='rust '>
-<span class='doccomment'>//! Standard *BSD hash.</span>
-<span class='comment'>//</span>
-<span class='comment'>// Copyright (c) 2016 Ivan Nejgebauer &lt;inejge@gmail.com&gt;</span>
-<span class='comment'>//</span>
-<span class='comment'>// Licensed under the MIT license &lt;LICENSE-MIT or</span>
-<span class='comment'>// http://opensource.org/licenses/MIT&gt;. This file may not be copied,</span>
-<span class='comment'>// modified, or distributed except according to the terms of this</span>
-<span class='comment'>// license.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! Bcrypt is a hashing algorithm based on the Blowfish stream cipher,</span>
-<span class='doccomment'>//! originally developed for OpenBSD and since adopted on other BSD</span>
-<span class='doccomment'>//! variants and other systems. It has a large salt, variable number</span>
-<span class='doccomment'>//! of rounds, and no known weaknesses.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! # Examples</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! To hash a password with a randomly generated salt, default cost,</span>
-<span class='doccomment'>//! and default output variant (__2b__):</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//! use pwhash::bcrypt;</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! let hash = bcrypt::hash(&quot;password&quot;).unwrap();</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! To use a different variant (__2y__), while letting the program</span>
-<span class='doccomment'>//! pick the salt and use the default cost:</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//! use pwhash::bcrypt::{self, BcryptSetup, BcryptVariant};</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! let hash = bcrypt::hash_with(BcryptSetup {</span>
-<span class='doccomment'>//!                variant: Some(BcryptVariant::V2y),</span>
-<span class='doccomment'>//!                ..Default::default() },</span>
-<span class='doccomment'>//!            &quot;password&quot;).unwrap();</span>
-<span class='doccomment'>//! ```</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! # Parameters</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * __Password length__: up to 72 characters. Longer passwords are</span>
-<span class='doccomment'>//! truncated to the maximum length.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * __Salt length__: 16 random bytes, encoded as 22 Base64 characters.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * __Cost__: logarithmic value between 4 and 31, inclusive. Increasing</span>
-<span class='doccomment'>//! the value by 1 doubles the amount of work. The default is 8.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! # Hash Format</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! The format of the hash is</span>
-<span class='doccomment'>//! **`$`**_`{variant}`_**`$`**_`{cost}`_**`$`**_`{salt}{checksum}`_, where:</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * _`{variant}`_ is one of **2a**, **2b**, or **2y**. The default is **2b**.</span>
-<span class='doccomment'>//! The actual computation is the same for all three variants; the choice</span>
-<span class='doccomment'>//! exists in order to retain compatibility with other software. See</span>
-<span class='doccomment'>//! [`BcryptVariant`](enum.BcryptVariant.html) for details.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * _`{cost}`_ is a two-digit decimal cost value between 4 and 31. Values</span>
-<span class='doccomment'>//! below 10 have a leading zero.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * _`{salt}`_ is a 22-character Base64 encoding of the 16 bytes of salt. The</span>
-<span class='doccomment'>//! salt must be exactly this long.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! * _`{checksum}`_ is a 31-character Base64 encoding of the computed hash.</span>
+<span id="273">273</span>
+<span id="274">274</span>
+</pre><pre class="rust ">
+<span class="doccomment">//! Standard *BSD hash.</span>
+<span class="comment">//</span>
+<span class="comment">// Copyright (c) 2016 Ivan Nejgebauer &lt;inejge@gmail.com&gt;</span>
+<span class="comment">//</span>
+<span class="comment">// Licensed under the MIT license &lt;LICENSE-MIT or</span>
+<span class="comment">// http://opensource.org/licenses/MIT&gt;. This file may not be copied,</span>
+<span class="comment">// modified, or distributed except according to the terms of this</span>
+<span class="comment">// license.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Bcrypt is a hashing algorithm based on the Blowfish stream cipher,</span>
+<span class="doccomment">//! originally developed for OpenBSD and since adopted on other BSD</span>
+<span class="doccomment">//! variants and other systems. It has a large salt, variable number</span>
+<span class="doccomment">//! of rounds, and no known weaknesses.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Examples</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To hash a password with a randomly generated salt, default cost,</span>
+<span class="doccomment">//! and default output variant (__2b__):</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use pwhash::bcrypt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! let hash = bcrypt::hash(&quot;password&quot;).unwrap();</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To use a different variant (__2y__), while letting the program</span>
+<span class="doccomment">//! pick the salt and use the default cost:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use pwhash::bcrypt::{self, BcryptSetup, BcryptVariant};</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! let hash = bcrypt::hash_with(BcryptSetup {</span>
+<span class="doccomment">//!                variant: Some(BcryptVariant::V2y),</span>
+<span class="doccomment">//!                ..Default::default() },</span>
+<span class="doccomment">//!            &quot;password&quot;).unwrap();</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Parameters</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * __Password length__: up to 72 characters. Longer passwords are</span>
+<span class="doccomment">//! truncated to the maximum length.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * __Salt length__: 16 random bytes, encoded as 22 Base64 characters.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * __Cost__: logarithmic value between 4 and 31, inclusive. Increasing</span>
+<span class="doccomment">//! the value by 1 doubles the amount of work. The default is 8.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Hash Format</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The format of the hash is</span>
+<span class="doccomment">//! **`$`**_`{variant}`_**`$`**_`{cost}`_**`$`**_`{salt}{checksum}`_, where:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * _`{variant}`_ is one of **2a**, **2b**, or **2y**. The default is **2b**.</span>
+<span class="doccomment">//! The actual computation is the same for all three variants; the choice</span>
+<span class="doccomment">//! exists in order to retain compatibility with other software. See</span>
+<span class="doccomment">//! [`BcryptVariant`](enum.BcryptVariant.html) for details.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * _`{cost}`_ is a two-digit decimal cost value between 4 and 31. Values</span>
+<span class="doccomment">//! below 10 have a leading zero.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * _`{salt}`_ is a 22-character Base64 encoding of the 16 bytes of salt. The</span>
+<span class="doccomment">//! salt must be exactly this long.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * _`{checksum}`_ is a 31-character Base64 encoding of the computed hash.</span>
 
-<span class='kw'>use</span> <span class='ident'>super</span>::{<span class='prelude-ty'>Result</span>, <span class='ident'>HashSetup</span>, <span class='ident'>consteq</span>};
-<span class='kw'>use</span> <span class='ident'>enc_dec</span>::{<span class='ident'>bcrypt_hash64_encode</span>,<span class='ident'>bcrypt_hash64_decode</span>};
-<span class='kw'>use</span> <span class='ident'>error</span>::<span class='ident'>Error</span>;
-<span class='kw'>use</span> <span class='ident'>random</span>;
-<span class='kw'>use</span> <span class='ident'>parse</span>::{<span class='self'>self</span>, <span class='ident'>HashIterator</span>};
-<span class='kw'>use</span> <span class='ident'>std</span>::{<span class='ident'>iter</span>, <span class='ident'>fmt</span>};
-<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>cmp</span>::<span class='ident'>min</span>;
-<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>default</span>::<span class='ident'>Default</span>;
-<span class='kw'>use</span> <span class='ident'>crypto</span>::<span class='ident'>bcrypt</span>::<span class='ident'>bcrypt</span>;
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="prelude-ty">Result</span>, <span class="ident">HashSetup</span>, <span class="ident">consteq</span>};
+<span class="kw">use</span> <span class="ident">enc_dec</span>::{<span class="ident">bcrypt_hash64_encode</span>,<span class="ident">bcrypt_hash64_decode</span>};
+<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">random</span>;
+<span class="kw">use</span> <span class="ident">parse</span>::{<span class="self">self</span>, <span class="ident">HashIterator</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">iter</span>, <span class="ident">fmt</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">min</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">default</span>::<span class="ident">Default</span>;
+<span class="kw">use</span> <span class="ident">crypto</span>::<span class="ident">bcrypt</span>::<span class="ident">bcrypt</span>;
 
-<span class='kw'>const</span> <span class='ident'>MAX_PASS_LEN</span>: <span class='ident'>usize</span> <span class='op'>=</span> <span class='number'>72</span>;
-<span class='kw'>const</span> <span class='ident'>DEFAULT_VARIANT</span>: <span class='ident'>BcryptVariant</span> <span class='op'>=</span> <span class='ident'>BcryptVariant</span>::<span class='ident'>V2b</span>;
-<span class='kw'>const</span> <span class='ident'>ENC_SALT_LEN</span>: <span class='ident'>usize</span> <span class='op'>=</span> <span class='number'>22</span>;
-<span class='doccomment'>/// Minimum cost.</span>
-<span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>MIN_COST</span>: <span class='ident'>u32</span> <span class='op'>=</span> <span class='number'>4</span>;
-<span class='doccomment'>/// Maximum cost.</span>
-<span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>MAX_COST</span>: <span class='ident'>u32</span> <span class='op'>=</span> <span class='number'>31</span>;
-<span class='doccomment'>/// Default cost.</span>
-<span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>DEFAULT_COST</span>: <span class='ident'>u32</span> <span class='op'>=</span> <span class='number'>8</span>;
+<span class="kw">const</span> <span class="ident">MAX_PASS_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">72</span>;
+<span class="kw">const</span> <span class="ident">DEFAULT_VARIANT</span>: <span class="ident">BcryptVariant</span> <span class="op">=</span> <span class="ident">BcryptVariant</span>::<span class="ident">V2b</span>;
+<span class="kw">const</span> <span class="ident">ENC_SALT_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">22</span>;
+<span class="doccomment">/// Minimum cost.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MIN_COST</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">4</span>;
+<span class="doccomment">/// Maximum cost.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAX_COST</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">31</span>;
+<span class="doccomment">/// Default cost.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_COST</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">8</span>;
 
-<span class='doccomment'>/// Identifiers of algorithm variants which can be produced.</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// Bcrypt has a long history of use, during which a number bugs were found</span>
-<span class='doccomment'>/// and fixed in the widely-used implementations. Some bugs were serious</span>
-<span class='doccomment'>/// enough to warrant a change in the minor version number of the algorithm</span>
-<span class='doccomment'>/// identifier.</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// There are two major bcrypt implementations: OpenBSD (the original, used in</span>
-<span class='doccomment'>/// all *BSDs) and Openwall. A short history of variants is as follows:</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// * **2** is the original OpenBSD version, which was very quickly replaced by</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// * **2a**, which fixed a bug that caused passwords with repeated strings to</span>
-<span class='doccomment'>/// produce the same hash as those with a single string (&quot;abab&quot; hashed the same</span>
-<span class='doccomment'>/// as &quot;ab&quot;.) This was the most widely used version, until</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// * **2y**, produced by Openwall, which fixed a sign-extension bug that</span>
-<span class='doccomment'>/// caused certain passwords with high-bit-set characters to produce weak keys.</span>
-<span class='doccomment'>/// OpenBSD didn&#39;t have this bug, and their logic can transparently handle the</span>
-<span class='doccomment'>/// **2y** hashes. The Openwall fix also introduced</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// * **2x**, meant for unambiguously identifying pre-fix **2a** hashes as</span>
-<span class='doccomment'>/// those produced by the buggy algorithm. OpenBSD doesn&#39;t treat **2x** hashes</span>
-<span class='doccomment'>/// specially, which means that it won&#39;t be able to verify buggy hashes. Some</span>
-<span class='doccomment'>/// time later, a wraparound bug was found in OpenBSD, leading to</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// * **2b**, which fixed the bug. As the problem involved unrealistically long</span>
-<span class='doccomment'>/// passwords, the bug was, fortunately, mostly theoretical. This variant is the</span>
-<span class='doccomment'>/// current default in most implementations.</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// This crate has a single bcrypt algorithm implementation which is equivalent</span>
-<span class='doccomment'>/// to the **2b** variant. It accepts **2a** and **2y** on input, and can</span>
-<span class='doccomment'>/// generate both on output, but doesn&#39;t treat them specially in any way.</span>
-<span class='kw'>pub</span> <span class='kw'>enum</span> <span class='ident'>BcryptVariant</span> {
-    <span class='doccomment'>/// Second OpenBSD variant, fixed repeated string hashing.</span>
-    <span class='ident'>V2a</span>,
-    <span class='doccomment'>/// Third OpenBSD variant, fixed a wraparound bug.</span>
-    <span class='ident'>V2b</span>,
-    <span class='doccomment'>/// Openwall variant, fixed a sign extension bug.</span>
-    <span class='ident'>V2y</span>,
+<span class="doccomment">/// Identifiers of algorithm variants which can be produced.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Bcrypt has a long history of use, during which a number bugs were found</span>
+<span class="doccomment">/// and fixed in the widely-used implementations. Some bugs were serious</span>
+<span class="doccomment">/// enough to warrant a change in the minor version number of the algorithm</span>
+<span class="doccomment">/// identifier.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// There are two major bcrypt implementations: OpenBSD (the original, used in</span>
+<span class="doccomment">/// all *BSDs) and Openwall. A short history of variants is as follows:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * **2** is the original OpenBSD version, which was very quickly replaced by</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * **2a**, which fixed a bug that caused passwords with repeated strings to</span>
+<span class="doccomment">/// produce the same hash as those with a single string (&quot;abab&quot; hashed the same</span>
+<span class="doccomment">/// as &quot;ab&quot;.) This was the most widely used version, until</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * **2y**, produced by Openwall, which fixed a sign-extension bug that</span>
+<span class="doccomment">/// caused certain passwords with high-bit-set characters to produce weak keys.</span>
+<span class="doccomment">/// OpenBSD didn&#39;t have this bug, and their logic can transparently handle the</span>
+<span class="doccomment">/// **2y** hashes. The Openwall fix also introduced</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * **2x**, meant for unambiguously identifying pre-fix **2a** hashes as</span>
+<span class="doccomment">/// those produced by the buggy algorithm. OpenBSD doesn&#39;t treat **2x** hashes</span>
+<span class="doccomment">/// specially, which means that it won&#39;t be able to verify buggy hashes. Some</span>
+<span class="doccomment">/// time later, a wraparound bug was found in OpenBSD, leading to</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * **2b**, which fixed the bug. As the problem involved unrealistically long</span>
+<span class="doccomment">/// passwords, the bug was, fortunately, mostly theoretical. This variant is the</span>
+<span class="doccomment">/// current default in most implementations.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This crate has a single bcrypt algorithm implementation which is equivalent</span>
+<span class="doccomment">/// to the **2b** variant. It accepts **2a** and **2y** on input, and can</span>
+<span class="doccomment">/// generate both on output, but doesn&#39;t treat them specially in any way.</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BcryptVariant</span> {
+    <span class="doccomment">/// Second OpenBSD variant, fixed repeated string hashing.</span>
+    <span class="ident">V2a</span>,
+    <span class="doccomment">/// Third OpenBSD variant, fixed a wraparound bug.</span>
+    <span class="ident">V2b</span>,
+    <span class="doccomment">/// Openwall variant, fixed a sign extension bug.</span>
+    <span class="ident">V2y</span>,
 }
 
-<span class='kw'>impl</span> <span class='ident'>fmt</span>::<span class='ident'>Display</span> <span class='kw'>for</span> <span class='ident'>BcryptVariant</span> {
-    <span class='kw'>fn</span> <span class='ident'>fmt</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>f</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>fmt</span>::<span class='ident'>Formatter</span>) <span class='op'>-&gt;</span> <span class='ident'>fmt</span>::<span class='prelude-ty'>Result</span> {
-	<span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>f</span>, <span class='string'>&quot;{}&quot;</span>, <span class='kw'>match</span> <span class='op'>*</span><span class='self'>self</span> {
-	    <span class='ident'>BcryptVariant</span>::<span class='ident'>V2a</span> <span class='op'>=&gt;</span> <span class='string'>&quot;2a&quot;</span>,
-	    <span class='ident'>BcryptVariant</span>::<span class='ident'>V2b</span> <span class='op'>=&gt;</span> <span class='string'>&quot;2b&quot;</span>,
-	    <span class='ident'>BcryptVariant</span>::<span class='ident'>V2y</span> <span class='op'>=&gt;</span> <span class='string'>&quot;2y&quot;</span>,
+<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">BcryptVariant</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+	<span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+	    <span class="ident">BcryptVariant</span>::<span class="ident">V2a</span> <span class="op">=&gt;</span> <span class="string">&quot;2a&quot;</span>,
+	    <span class="ident">BcryptVariant</span>::<span class="ident">V2b</span> <span class="op">=&gt;</span> <span class="string">&quot;2b&quot;</span>,
+	    <span class="ident">BcryptVariant</span>::<span class="ident">V2y</span> <span class="op">=&gt;</span> <span class="string">&quot;2y&quot;</span>,
 	})
     }
 }
 
-<span class='doccomment'>/// Setup struct for bcrypt.</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// In addition to custom salt and cost values, a bcrypt hash can use different</span>
-<span class='doccomment'>/// algorithm variant identifiers.</span>
-<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>BcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-    <span class='doccomment'>/// Custom salt.</span>
-    <span class='kw'>pub</span> <span class='ident'>salt</span>: <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span><span class='op'>&gt;</span>,
-    <span class='doccomment'>/// Custom cost.</span>
-    <span class='kw'>pub</span> <span class='ident'>cost</span>: <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>u32</span><span class='op'>&gt;</span>,
-    <span class='doccomment'>/// Algorithm variant.</span>
-    <span class='kw'>pub</span> <span class='ident'>variant</span>: <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>BcryptVariant</span><span class='op'>&gt;</span>,
+<span class="doccomment">/// Setup struct for bcrypt.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// In addition to custom salt and cost values, a bcrypt hash can use different</span>
+<span class="doccomment">/// algorithm variant identifiers.</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Custom salt.</span>
+    <span class="kw">pub</span> <span class="ident">salt</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Custom cost.</span>
+    <span class="kw">pub</span> <span class="ident">cost</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Algorithm variant.</span>
+    <span class="kw">pub</span> <span class="ident">variant</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BcryptVariant</span><span class="op">&gt;</span>,
 }
 
-<span class='doccomment'>/// A trait for converting a type into a `BcryptSetup` struct.</span>
-<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>IntoBcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-    <span class='doccomment'>/// The conversion function.</span>
-    <span class='kw'>fn</span> <span class='ident'>into_bcrypt_setup</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>BcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;&gt;</span>;
+<span class="doccomment">/// A trait for converting a type into a `BcryptSetup` struct.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">IntoBcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The conversion function.</span>
+    <span class="kw">fn</span> <span class="ident">into_bcrypt_setup</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span>;
 }
 
-<span class='kw'>const</span> <span class='ident'>MAGIC_LEN</span>: <span class='ident'>usize</span> <span class='op'>=</span> <span class='number'>4</span>;
+<span class="kw">const</span> <span class="ident">MAGIC_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>IntoBcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span> {
-    <span class='kw'>fn</span> <span class='ident'>into_bcrypt_setup</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>BcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;&gt;</span> {
-	<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>hs</span> <span class='op'>=</span> <span class='ident'>parse</span>::<span class='ident'>HashSlice</span>::<span class='ident'>new</span>(<span class='self'>self</span>);
-	<span class='kw'>let</span> <span class='ident'>variant</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>hs</span>.<span class='ident'>take</span>(<span class='ident'>MAGIC_LEN</span>).<span class='ident'>unwrap_or</span>(<span class='string'>&quot;X&quot;</span>) {
-	    <span class='string'>&quot;$2a$&quot;</span> <span class='op'>=&gt;</span> <span class='ident'>BcryptVariant</span>::<span class='ident'>V2a</span>,
-	    <span class='string'>&quot;$2b$&quot;</span> <span class='op'>=&gt;</span> <span class='ident'>BcryptVariant</span>::<span class='ident'>V2b</span>,
-	    <span class='string'>&quot;$2y$&quot;</span> <span class='op'>=&gt;</span> <span class='ident'>BcryptVariant</span>::<span class='ident'>V2y</span>,
-	    _ <span class='op'>=&gt;</span> <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidHashString</span>),
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IntoBcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">into_bcrypt_setup</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span> {
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hs</span> <span class="op">=</span> <span class="ident">parse</span>::<span class="ident">HashSlice</span>::<span class="ident">new</span>(<span class="self">self</span>);
+	<span class="kw">let</span> <span class="ident">variant</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">hs</span>.<span class="ident">take</span>(<span class="ident">MAGIC_LEN</span>).<span class="ident">unwrap_or</span>(<span class="string">&quot;X&quot;</span>) {
+	    <span class="string">&quot;$2a$&quot;</span> <span class="op">=&gt;</span> <span class="ident">BcryptVariant</span>::<span class="ident">V2a</span>,
+	    <span class="string">&quot;$2b$&quot;</span> <span class="op">=&gt;</span> <span class="ident">BcryptVariant</span>::<span class="ident">V2b</span>,
+	    <span class="string">&quot;$2y$&quot;</span> <span class="op">=&gt;</span> <span class="ident">BcryptVariant</span>::<span class="ident">V2y</span>,
+	    _ <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidHashString</span>),
 	};
-	<span class='kw'>let</span> <span class='ident'>cost</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>cost_str</span>) <span class='op'>=</span> <span class='ident'>hs</span>.<span class='ident'>take_until</span>(<span class='string'>b&#39;$&#39;</span>) {
-	    <span class='kw'>if</span> <span class='ident'>cost_str</span>.<span class='ident'>len</span>() <span class='op'>!=</span> <span class='number'>2</span> {
-		<span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidHashString</span>);
+	<span class="kw">let</span> <span class="ident">cost</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cost_str</span>) <span class="op">=</span> <span class="ident">hs</span>.<span class="ident">take_until</span>(<span class="string">b&#39;$&#39;</span>) {
+	    <span class="kw">if</span> <span class="ident">cost_str</span>.<span class="ident">len</span>() <span class="op">!=</span> <span class="number">2</span> {
+		<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidHashString</span>);
 	    }
-	    <span class='kw'>let</span> <span class='ident'>cost</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>cost_str</span>.<span class='ident'>parse</span>::<span class='op'>&lt;</span><span class='ident'>u32</span><span class='op'>&gt;</span>().<span class='ident'>map_err</span>(<span class='op'>|</span><span class='ident'>_e</span><span class='op'>|</span> <span class='ident'>Error</span>::<span class='ident'>InvalidRounds</span>));
-	    <span class='kw'>if</span> <span class='ident'>cost</span> <span class='op'>&lt;</span> <span class='number'>10</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='ident'>cost_str</span>.<span class='ident'>starts_with</span>(<span class='string'>&#39;0&#39;</span>) {
-		<span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidHashString</span>);
+	    <span class="kw">let</span> <span class="ident">cost</span> <span class="op">=</span> <span class="ident">cost_str</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">_e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">InvalidRounds</span>)<span class="question-mark">?</span>;
+	    <span class="kw">if</span> <span class="ident">cost</span> <span class="op">&lt;</span> <span class="number">10</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">cost_str</span>.<span class="ident">starts_with</span>(<span class="string">&#39;0&#39;</span>) {
+		<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidHashString</span>);
 	    }
-	    <span class='ident'>cost</span>
-	} <span class='kw'>else</span> {
-	    <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidHashString</span>);
+	    <span class="ident">cost</span>
+	} <span class="kw">else</span> {
+	    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidHashString</span>);
 	};
-	<span class='kw'>let</span> <span class='ident'>salt</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>salt</span>) <span class='op'>=</span> <span class='ident'>hs</span>.<span class='ident'>take</span>(<span class='ident'>ENC_SALT_LEN</span>) {
-	    <span class='ident'>salt</span>
-	} <span class='kw'>else</span> {
-	    <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidHashString</span>);
+	<span class="kw">let</span> <span class="ident">salt</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">salt</span>) <span class="op">=</span> <span class="ident">hs</span>.<span class="ident">take</span>(<span class="ident">ENC_SALT_LEN</span>) {
+	    <span class="ident">salt</span>
+	} <span class="kw">else</span> {
+	    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidHashString</span>);
 	};
-	<span class='prelude-val'>Ok</span>(<span class='ident'>BcryptSetup</span> { <span class='ident'>salt</span>: <span class='prelude-val'>Some</span>(<span class='ident'>salt</span>), <span class='ident'>cost</span>: <span class='prelude-val'>Some</span>(<span class='ident'>cost</span>), <span class='ident'>variant</span>: <span class='prelude-val'>Some</span>(<span class='ident'>variant</span>) })
+	<span class="prelude-val">Ok</span>(<span class="ident">BcryptSetup</span> { <span class="ident">salt</span>: <span class="prelude-val">Some</span>(<span class="ident">salt</span>), <span class="ident">cost</span>: <span class="prelude-val">Some</span>(<span class="ident">cost</span>), <span class="ident">variant</span>: <span class="prelude-val">Some</span>(<span class="ident">variant</span>) })
     }
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>IntoBcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='ident'>HashSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-    <span class='kw'>fn</span> <span class='ident'>into_bcrypt_setup</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>BcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;&gt;</span> {
-	<span class='prelude-val'>Ok</span>(<span class='ident'>BcryptSetup</span> { <span class='ident'>salt</span>: <span class='self'>self</span>.<span class='ident'>salt</span>, <span class='ident'>cost</span>: <span class='self'>self</span>.<span class='ident'>rounds</span>, <span class='ident'>variant</span>: <span class='prelude-val'>Some</span>(<span class='ident'>DEFAULT_VARIANT</span>) })
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IntoBcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">HashSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">into_bcrypt_setup</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span> {
+	<span class="prelude-val">Ok</span>(<span class="ident">BcryptSetup</span> { <span class="ident">salt</span>: <span class="self">self</span>.<span class="ident">salt</span>, <span class="ident">cost</span>: <span class="self">self</span>.<span class="ident">rounds</span>, <span class="ident">variant</span>: <span class="prelude-val">Some</span>(<span class="ident">DEFAULT_VARIANT</span>) })
     }
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>IntoBcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='ident'>BcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-    <span class='kw'>fn</span> <span class='ident'>into_bcrypt_setup</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>BcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;&gt;</span> {
-	<span class='prelude-val'>Ok</span>(<span class='self'>self</span>)
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IntoBcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">into_bcrypt_setup</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span> {
+	<span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>Default</span> <span class='kw'>for</span> <span class='ident'>BcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-    <span class='kw'>fn</span> <span class='ident'>default</span>() <span class='op'>-&gt;</span> <span class='kw'>Self</span> {
-	<span class='ident'>BcryptSetup</span> { <span class='ident'>salt</span>: <span class='prelude-val'>None</span>, <span class='ident'>cost</span>: <span class='prelude-val'>Some</span>(<span class='ident'>DEFAULT_COST</span>), <span class='ident'>variant</span>: <span class='prelude-val'>Some</span>(<span class='ident'>DEFAULT_VARIANT</span>) }
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">BcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-&gt;</span> <span class="self">Self</span> {
+	<span class="ident">BcryptSetup</span> { <span class="ident">salt</span>: <span class="prelude-val">None</span>, <span class="ident">cost</span>: <span class="prelude-val">Some</span>(<span class="ident">DEFAULT_COST</span>), <span class="ident">variant</span>: <span class="prelude-val">Some</span>(<span class="ident">DEFAULT_VARIANT</span>) }
     }
 }
 
-<span class='kw'>fn</span> <span class='ident'>do_bcrypt</span>(<span class='ident'>pass</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>, <span class='ident'>salt</span>: <span class='kw-2'>&amp;</span>[<span class='ident'>u8</span>], <span class='ident'>cost</span>: <span class='ident'>u32</span>, <span class='ident'>variant</span>: <span class='ident'>BcryptVariant</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> {
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>upd_pass</span> <span class='op'>=</span> <span class='ident'>pass</span>.<span class='ident'>bytes</span>().<span class='ident'>chain</span>(<span class='ident'>iter</span>::<span class='ident'>repeat</span>(<span class='number'>0u8</span>)).<span class='ident'>take</span>(<span class='ident'>min</span>(<span class='ident'>pass</span>.<span class='ident'>len</span>() <span class='op'>+</span> <span class='number'>1</span>, <span class='ident'>MAX_PASS_LEN</span>)).<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span>_<span class='op'>&gt;&gt;</span>();
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>output</span> <span class='op'>=</span> [<span class='number'>0u8</span>; <span class='number'>24</span>];
-    <span class='ident'>bcrypt</span>(<span class='ident'>cost</span>, <span class='kw-2'>&amp;</span><span class='ident'>salt</span>, <span class='kw-2'>&amp;</span><span class='ident'>upd_pass</span>[..], <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>output</span>);
-    <span class='kw'>for</span> <span class='ident'>b</span> <span class='kw'>in</span> <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>upd_pass</span> {
-	<span class='op'>*</span><span class='ident'>b</span> <span class='op'>=</span> <span class='number'>0u8</span>;
+<span class="kw">fn</span> <span class="ident">do_bcrypt</span>(<span class="ident">pass</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">salt</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">cost</span>: <span class="ident">u32</span>, <span class="ident">variant</span>: <span class="ident">BcryptVariant</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">upd_pass</span> <span class="op">=</span> <span class="ident">pass</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">b</span>).<span class="ident">chain</span>(<span class="ident">iter</span>::<span class="ident">repeat</span>(<span class="number">0u8</span>)).<span class="ident">take</span>(<span class="ident">min</span>(<span class="ident">pass</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">1</span>, <span class="ident">MAX_PASS_LEN</span>)).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;&gt;</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">24</span>];
+    <span class="ident">bcrypt</span>(<span class="ident">cost</span>, <span class="kw-2">&amp;</span><span class="ident">salt</span>, <span class="kw-2">&amp;</span><span class="ident">upd_pass</span>[..], <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
+    <span class="kw">for</span> <span class="ident">b</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">upd_pass</span> {
+	<span class="kw-2">*</span><span class="ident">b</span> <span class="op">=</span> <span class="number">0u8</span>;
     }
-    <span class='prelude-val'>Ok</span>(<span class='macro'>format</span><span class='macro'>!</span>(<span class='string'>&quot;${}${:02}${}{}&quot;</span>, <span class='ident'>variant</span>, <span class='ident'>cost</span>,
-	<span class='ident'>bcrypt_hash64_encode</span>(<span class='kw-2'>&amp;</span><span class='ident'>salt</span>), <span class='ident'>bcrypt_hash64_encode</span>(<span class='kw-2'>&amp;</span><span class='ident'>output</span>[..<span class='number'>23</span>])))
+    <span class="prelude-val">Ok</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;${}${:02}${}{}&quot;</span>, <span class="ident">variant</span>, <span class="ident">cost</span>,
+	<span class="ident">bcrypt_hash64_encode</span>(<span class="kw-2">&amp;</span><span class="ident">salt</span>), <span class="ident">bcrypt_hash64_encode</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>[..<span class="number">23</span>])))
 }
 
-<span class='doccomment'>/// Hash a password with a randomly generated salt, default cost,</span>
-<span class='doccomment'>/// and default variant.</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// An error is returned if the system random number generator cannot</span>
-<span class='doccomment'>/// be opened.</span>
-<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>hash</span>(<span class='ident'>pass</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> {
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>salt_buf</span> <span class='op'>=</span> [<span class='number'>0u8</span>; <span class='number'>16</span>];
-    <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>random</span>::<span class='ident'>gen_salt_bytes</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>salt_buf</span>));
-    <span class='ident'>do_bcrypt</span>(<span class='ident'>pass</span>, <span class='kw-2'>&amp;</span><span class='ident'>salt_buf</span>, <span class='ident'>DEFAULT_COST</span>, <span class='ident'>DEFAULT_VARIANT</span>)
+<span class="doccomment">/// Hash a password with a randomly generated salt, default cost,</span>
+<span class="doccomment">/// and default variant.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// An error is returned if the system random number generator cannot</span>
+<span class="doccomment">/// be opened.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;&gt;</span>(<span class="ident">pass</span>: <span class="ident">B</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">salt_buf</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">16</span>];
+    <span class="ident">random</span>::<span class="ident">gen_salt_bytes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">salt_buf</span>)<span class="question-mark">?</span>;
+    <span class="ident">do_bcrypt</span>(<span class="ident">pass</span>.<span class="ident">as_ref</span>(), <span class="kw-2">&amp;</span><span class="ident">salt_buf</span>, <span class="ident">DEFAULT_COST</span>, <span class="ident">DEFAULT_VARIANT</span>)
 }
 
-<span class='doccomment'>/// Hash a password with user-provided parameters.</span>
-<span class='doccomment'>///</span>
-<span class='doccomment'>/// Bcrypt has its own setup struct because of the additional variant</span>
-<span class='doccomment'>/// field. An ordinary `HashSetup` can be converted into `BcryptSetup`, which</span>
-<span class='doccomment'>/// will set the variant to default. The `Default` trait is implemented for</span>
-<span class='doccomment'>/// `BcryptSetup`, which makes it easier to initialize just the desired</span>
-<span class='doccomment'>/// fields (see the module-level example.)</span>
-<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>hash_with</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span>, <span class='ident'>IBS</span><span class='op'>&gt;</span>(<span class='ident'>param</span>: <span class='ident'>IBS</span>, <span class='ident'>pass</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>IBS</span>: <span class='ident'>IntoBcryptSetup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
-    <span class='kw'>let</span> <span class='ident'>bs</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>param</span>.<span class='ident'>into_bcrypt_setup</span>());
-    <span class='kw'>let</span> <span class='ident'>cost</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>c</span>) <span class='op'>=</span> <span class='ident'>bs</span>.<span class='ident'>cost</span> {
-	<span class='kw'>if</span> <span class='ident'>c</span> <span class='op'>&lt;</span> <span class='ident'>MIN_COST</span> <span class='op'>||</span> <span class='ident'>c</span> <span class='op'>&gt;</span> <span class='ident'>MAX_COST</span> {
-	    <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InvalidRounds</span>);
+<span class="doccomment">/// Hash a password with user-provided parameters.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Bcrypt has its own setup struct because of the additional variant</span>
+<span class="doccomment">/// field. An ordinary `HashSetup` can be converted into `BcryptSetup`, which</span>
+<span class="doccomment">/// will set the variant to default. The `Default` trait is implemented for</span>
+<span class="doccomment">/// `BcryptSetup`, which makes it easier to initialize just the desired</span>
+<span class="doccomment">/// fields (see the module-level example.)</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash_with</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">IBS</span>, <span class="ident">B</span><span class="op">&gt;</span>(<span class="ident">param</span>: <span class="ident">IBS</span>, <span class="ident">pass</span>: <span class="ident">B</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>
+    <span class="kw">where</span> <span class="ident">IBS</span>: <span class="ident">IntoBcryptSetup</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>
+{
+    <span class="kw">let</span> <span class="ident">bs</span> <span class="op">=</span> <span class="ident">param</span>.<span class="ident">into_bcrypt_setup</span>()<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">cost</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span> <span class="ident">bs</span>.<span class="ident">cost</span> {
+	<span class="kw">if</span> <span class="ident">c</span> <span class="op">&lt;</span> <span class="ident">MIN_COST</span> <span class="op">||</span> <span class="ident">c</span> <span class="op">&gt;</span> <span class="ident">MAX_COST</span> {
+	    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidRounds</span>);
 	}
-	<span class='ident'>c</span>
-    } <span class='kw'>else</span> { <span class='ident'>DEFAULT_COST</span> };
-    <span class='kw'>let</span> <span class='ident'>variant</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>v</span>) <span class='op'>=</span> <span class='ident'>bs</span>.<span class='ident'>variant</span> {
-	<span class='ident'>v</span>
-    } <span class='kw'>else</span> { <span class='ident'>DEFAULT_VARIANT</span> };
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>salt_buf</span> <span class='op'>=</span> [<span class='number'>0u8</span>; <span class='number'>16</span>];
-    <span class='kw'>if</span> <span class='ident'>bs</span>.<span class='ident'>salt</span>.<span class='ident'>is_some</span>() {
-	<span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>bcrypt_hash64_decode</span>(<span class='ident'>bs</span>.<span class='ident'>salt</span>.<span class='ident'>unwrap</span>(), <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>salt_buf</span>));
-    } <span class='kw'>else</span> {
-	<span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>random</span>::<span class='ident'>gen_salt_bytes</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>salt_buf</span>));
+	<span class="ident">c</span>
+    } <span class="kw">else</span> { <span class="ident">DEFAULT_COST</span> };
+    <span class="kw">let</span> <span class="ident">variant</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span> <span class="ident">bs</span>.<span class="ident">variant</span> {
+	<span class="ident">v</span>
+    } <span class="kw">else</span> { <span class="ident">DEFAULT_VARIANT</span> };
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">salt_buf</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">16</span>];
+    <span class="kw">if</span> <span class="ident">bs</span>.<span class="ident">salt</span>.<span class="ident">is_some</span>() {
+	<span class="ident">bcrypt_hash64_decode</span>(<span class="ident">bs</span>.<span class="ident">salt</span>.<span class="ident">unwrap</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">salt_buf</span>)<span class="question-mark">?</span>;
+    } <span class="kw">else</span> {
+	<span class="ident">random</span>::<span class="ident">gen_salt_bytes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">salt_buf</span>)<span class="question-mark">?</span>;
     }
-    <span class='ident'>do_bcrypt</span>(<span class='ident'>pass</span>, <span class='kw-2'>&amp;</span><span class='ident'>salt_buf</span>, <span class='ident'>cost</span>, <span class='ident'>variant</span>)
+    <span class="ident">do_bcrypt</span>(<span class="ident">pass</span>.<span class="ident">as_ref</span>(), <span class="kw-2">&amp;</span><span class="ident">salt_buf</span>, <span class="ident">cost</span>, <span class="ident">variant</span>)
 }
 
-<span class='doccomment'>/// Verify that the hash corresponds to a password.</span>
-<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>verify</span>(<span class='ident'>pass</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>, <span class='ident'>hash</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> {
-    <span class='ident'>consteq</span>(<span class='ident'>hash</span>, <span class='ident'>hash_with</span>(<span class='ident'>hash</span>, <span class='ident'>pass</span>))
+<span class="doccomment">/// Verify that the hash corresponds to a password.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;&gt;</span>(<span class="ident">pass</span>: <span class="ident">B</span>, <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+    <span class="ident">consteq</span>(<span class="ident">hash</span>, <span class="ident">hash_with</span>(<span class="ident">hash</span>, <span class="ident">pass</span>))
 }
 
-<span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
-<span class='kw'>mod</span> <span class='ident'>tests</span> {
-    <span class='kw'>use</span> <span class='ident'>super</span>::{<span class='ident'>BcryptSetup</span>, <span class='ident'>BcryptVariant</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">BcryptSetup</span>, <span class="ident">BcryptVariant</span>};
 
-    <span class='attribute'>#[<span class='ident'>test</span>]</span>
-    <span class='kw'>fn</span> <span class='ident'>variant</span>() {
-	<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='string'>&quot;$2y$05$bvIG6Nmid91Mu9RcmmWZfO5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;</span>,
-	    <span class='ident'>super</span>::<span class='ident'>hash_with</span>(<span class='ident'>BcryptSetup</span> { <span class='ident'>salt</span>: <span class='prelude-val'>Some</span>(<span class='string'>&quot;bvIG6Nmid91Mu9RcmmWZfO&quot;</span>), <span class='ident'>cost</span>: <span class='prelude-val'>Some</span>(<span class='number'>5</span>),
-		<span class='ident'>variant</span>: <span class='prelude-val'>Some</span>(<span class='ident'>BcryptVariant</span>::<span class='ident'>V2y</span>) },
-	    <span class='string'>&quot;password&quot;</span>).<span class='ident'>unwrap</span>());
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">variant</span>() {
+	<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;$2y$05$bvIG6Nmid91Mu9RcmmWZfO5HJIMCT8riNW0hEp8f6/FuA2/mHZFpe&quot;</span>,
+	    <span class="kw">super</span>::<span class="ident">hash_with</span>(<span class="ident">BcryptSetup</span> { <span class="ident">salt</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;bvIG6Nmid91Mu9RcmmWZfO&quot;</span>), <span class="ident">cost</span>: <span class="prelude-val">Some</span>(<span class="number">5</span>),
+		<span class="ident">variant</span>: <span class="prelude-val">Some</span>(<span class="ident">BcryptVariant</span>::<span class="ident">V2y</span>) },
+	    <span class="string">&quot;password&quot;</span>).<span class="ident">unwrap</span>());
     }
 }
 </pre>
@@ -600,16 +617,22 @@
                 <h2>Keyboard Shortcuts</h2>
 
                 <dl>
-                    <dt>?</dt>
+                    <dt><kbd>?</kbd></dt>
                     <dd>Show this help dialog</dd>
-                    <dt>S</dt>
+                    <dt><kbd>S</kbd></dt>
                     <dd>Focus the search field</dd>
-                    <dt>&larrb;</dt>
+                    <dt><kbd>↑</kbd></dt>
                     <dd>Move up in search results</dd>
-                    <dt>&rarrb;</dt>
+                    <dt><kbd>↓</kbd></dt>
                     <dd>Move down in search results</dd>
-                    <dt>&#9166;</dt>
+                    <dt><kbd>↹</kbd></dt>
+                    <dd>Switch tab</dd>
+                    <dt><kbd>&#9166;</kbd></dt>
                     <dd>Go to active search result</dd>
+                    <dt><kbd>+</kbd></dt>
+                    <dd>Expand all sections</dd>
+                    <dt><kbd>-</kbd></dt>
+                    <dd>Collapse all sections</dd>
                 </dl>
             </div>
 
@@ -630,7 +653,7 @@
 
                 <p>
                     Search functions by type signature (e.g.
-                    <code>vec -> usize</code>)
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
                 </p>
             </div>
         </div>
@@ -641,11 +664,8 @@
     <script>
         window.rootPath = "../../";
         window.currentCrate = "pwhash";
-        window.playgroundUrl = "";
     </script>
-    <script src="../../jquery.js"></script>
     <script src="../../main.js"></script>
-    
     <script defer src="../../search-index.js"></script>
 </body>
 </html>
