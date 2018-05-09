@@ -329,6 +329,7 @@ pub mod unix {
     /// A Unix __crypt__(3) work-alike.
     pub fn crypt(pass: &str, hash: &str) -> Result<String> {
 	let mut hs = parse::HashSlice::new(hash);
+	#[allow(deprecated)]
 	match hs.take(1).unwrap_or("X") {
 	    "_" => bsdi_crypt::hash_with(hash, pass),
 	    "$" => match hs.take_until(b'$').unwrap_or("X") {

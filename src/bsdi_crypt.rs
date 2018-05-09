@@ -63,6 +63,7 @@ const ROUNDS_LEN: usize = 4;
 ///
 /// An error is returned if the system random number generator cannot
 /// be opened.
+#[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
 pub fn hash(pass: &str) -> Result<String> {
     let saltstr = random::gen_salt_str(SALT_LEN)?;
     bsdi_crypt(pass, &saltstr, DEFAULT_ROUNDS)
@@ -92,6 +93,7 @@ fn parse_bsdi_hash(hash: &str) -> Result<HashSetup> {
 /// format. The number of rounds and the salt are parsed out of that value.
 /// An error is returned if the salt is too short or contains an invalid
 /// character. An out-of-range rounds value will also result in an error.
+#[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
 pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
     let hs = IHS::into_hash_setup(param, parse_bsdi_hash)?;
     let rounds = if let Some(r) = hs.rounds {
@@ -110,6 +112,7 @@ pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: I
 
 /// Verify that the hash corresponds to a password.
 pub fn verify(pass: &str, hash: &str) -> bool {
+    #[allow(deprecated)]
     consteq(hash, hash_with(hash, pass))
 }
 
@@ -118,6 +121,7 @@ mod tests {
     use ::HashSetup;
 
     #[test]
+    #[allow(deprecated)]
     fn custom() {
 	assert_eq!(super::hash_with(HashSetup { salt: Some("K0Ay"), rounds: None }, "password").unwrap(),
 	    "_Gl/.K0Ay.aosctsbJ1k");
@@ -125,6 +129,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     #[should_panic(expected="value: InvalidRounds")]
     fn bad_rounds() {
 	let _ = super::hash_with(HashSetup { salt: Some("K0Ay"), rounds: Some(0) }, "password").unwrap();

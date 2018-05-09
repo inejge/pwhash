@@ -70,6 +70,7 @@ fn do_sha256_crypt(pass: &str, salt: &str, rounds: Option<u32>) -> Result<String
 ///
 /// An error is returned if the system random number generator cannot
 /// be opened.
+#[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
 pub fn hash(pass: &str) -> Result<String> {
     let saltstr = random::gen_salt_str(MAX_SALT_LEN)?;
     do_sha256_crypt(pass, &saltstr, None)
@@ -86,12 +87,14 @@ fn parse_sha256_hash(hash: &str) -> Result<HashSetup> {
 /// If the salt is too long, it is truncated to maximum length. If it contains
 /// an invalid character, an error is returned. An out-of-range rounds value
 /// will be coerced into the allowed range.
+#[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
 pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
     sha2_hash_with(IHS::into_hash_setup(param, parse_sha256_hash)?, pass, do_sha256_crypt)
 }
 
 /// Verify that the hash corresponds to a password.
 pub fn verify(pass: &str, hash: &str) -> bool {
+    #[allow(deprecated)]
     consteq(hash, hash_with(hash, pass))
 }
 
@@ -100,6 +103,7 @@ mod tests {
     use ::HashSetup;
 
     #[test]
+    #[allow(deprecated)]
     fn custom() {
 	assert_eq!(super::hash_with(
 		   "$5$rounds=11858$WH1ABM5sKhxbkgCK$aTQsjPkz0rBsH3lQlJxw9HDTDXPKBxC0LlVeV69P.t1", "test").unwrap(),
@@ -109,6 +113,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn implicit_dflt_rounds() {
 	assert_eq!(super::hash_with(
 		   "$5$WH1ABM5sKhxbkgCK$sOnTVjQn1Y3EWibd8gWqqJqjH.KaFrxJE5rijqxcPp7", "test").unwrap(),

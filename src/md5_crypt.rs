@@ -123,6 +123,7 @@ fn do_md5_crypt(pass: &str, salt: &str) -> Result<String> {
 ///
 /// An error is returned if the system random number generator cannot
 /// be opened.
+#[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
 pub fn hash(pass: &str) -> Result<String> {
     let saltstr = random::gen_salt_str(MAX_SALT_LEN)?;
     do_md5_crypt(pass, &saltstr)
@@ -149,6 +150,7 @@ fn parse_md5_hash(hash: &str) -> Result<HashSetup> {
 /// format. The salt is parsed out of that value.
 /// If the salt is too long, it is truncated to maximum length. If it contains
 /// an invalid character, an error is returned.
+#[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
 pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
     let hs = IHS::into_hash_setup(param, parse_md5_hash)?;
     if let Some(salt) = hs.salt {
@@ -168,6 +170,7 @@ pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: I
 
 /// Verify that the hash corresponds to a password.
 pub fn verify(pass: &str, hash: &str) -> bool {
+    #[allow(deprecated)]
     consteq(hash, hash_with(hash, pass))
 }
 
@@ -176,6 +179,7 @@ mod tests {
     use ::HashSetup;
 
     #[test]
+    #[allow(deprecated)]
     fn custom() {
 	assert_eq!(super::hash_with("$1$5pZSV9va$azfrPr6af3Fc7dLblQXVa0", "password").unwrap(),
 	    "$1$5pZSV9va$azfrPr6af3Fc7dLblQXVa0");

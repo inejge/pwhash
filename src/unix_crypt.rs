@@ -50,6 +50,7 @@ pub const SALT_LEN: usize = 2;
 ///
 /// An error is returned if the system random number generator cannot
 /// be opened.
+#[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
 pub fn hash(pass: &str) -> Result<String> {
     let saltstr = random::gen_salt_str(SALT_LEN)?;
     unix_crypt(pass, &saltstr)
@@ -59,6 +60,7 @@ pub fn hash(pass: &str) -> Result<String> {
 ///
 /// An error is returned if the salt is too short or contains an invalid
 /// character.
+#[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
 pub fn hash_with(salt: &str, pass: &str) -> Result<String> {
     unix_crypt(pass, salt)
 }
@@ -71,6 +73,7 @@ pub fn verify(pass: &str, hash: &str) -> bool {
 #[cfg(test)]
 mod tests {
     #[test]
+    #[allow(deprecated)]
     fn custom() {
 	assert_eq!("aZGJuE6EXrjEE", super::hash_with("aZ", "test").unwrap());
 	assert_eq!(super::verify("test", "aZGJuE6EXrjEE"), true);
@@ -79,12 +82,14 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     #[should_panic(expected="value: EncodingError")]
     fn bad_salt_chars() {
 	let _ = super::hash_with("!!", "test").unwrap();
     }
 
     #[test]
+    #[allow(deprecated)]
     #[should_panic(expected="value: InsufficientLength")]
     fn short_salt() {
 	let _ = super::hash_with("Z", "test").unwrap();
