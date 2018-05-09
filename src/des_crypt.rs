@@ -571,8 +571,8 @@ use super::Result;
 
 const DES_ROUNDS: u32 = 25;
 
-pub fn unix_crypt(key: &str, salt: &str) -> Result<String> {
-    let keyword = secret_to_key(key.as_bytes());
+pub fn unix_crypt(key: &[u8], salt: &str) -> Result<String> {
+    let keyword = secret_to_key(key);
     let salt_val = decode_val(salt, unix_crypt::SALT_LEN)?;
     Ok(format!("{}{}", encode_val(salt_val, unix_crypt::SALT_LEN), do_0_crypt(keyword, salt_val, DES_ROUNDS)))
 }
@@ -580,13 +580,12 @@ pub fn unix_crypt(key: &str, salt: &str) -> Result<String> {
 use super::bsdi_crypt;
 use std::cmp::min;
 
-pub fn bsdi_crypt(key: &str, salt: &str, rounds: u32) -> Result<String> {
-    let key_bytes = key.as_bytes();
-    let keylen = key_bytes.len();
-    let mut keyword = secret_to_key(&key_bytes[..min(keylen, 8)]);
+pub fn bsdi_crypt(key: &[u8], salt: &str, rounds: u32) -> Result<String> {
+    let keylen = key.len();
+    let mut keyword = secret_to_key(&key[..min(keylen, 8)]);
     let mut idx = 8;
     while idx < keylen {
-	let next_keyword = secret_to_key(&key_bytes[idx..min(keylen, idx + 8)]);
+	let next_keyword = secret_to_key(&key[idx..min(keylen, idx + 8)]);
 	keyword = des_cipher(keyword, keyword, 0, 1) ^ next_keyword;
 	idx += 8;
     }

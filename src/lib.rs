@@ -327,7 +327,7 @@ pub mod unix {
     use {bsdi_crypt, md5_crypt, bcrypt, sha1_crypt, sha256_crypt, sha512_crypt, unix_crypt};
 
     /// A Unix __crypt__(3) work-alike.
-    pub fn crypt(pass: &str, hash: &str) -> Result<String> {
+    pub fn crypt<B: AsRef<[u8]>>(pass: B, hash: &str) -> Result<String> {
 	let mut hs = parse::HashSlice::new(hash);
 	#[allow(deprecated)]
 	match hs.take(1).unwrap_or("X") {
@@ -345,7 +345,7 @@ pub mod unix {
     }
 
     /// Verify that the hash corresponds to a password, using hash format recognition.
-    pub fn verify(pass: &str, hash: &str) -> bool {
+    pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
 	consteq(hash, crypt(pass, hash))
     }
 

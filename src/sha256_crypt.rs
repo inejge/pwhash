@@ -61,7 +61,7 @@ const SHA256_MAGIC: &'static str = "$5$";
 const SHA256_TRANSPOSE: &'static [u8] = b"\x14\x0a\x00\x0b\x01\x15\x02\x16\x0c\x17\x0d\x03\x0e\x04\x18\x05\
 					  \x19\x0f\x1a\x10\x06\x11\x07\x1b\x08\x1c\x12\x1d\x13\x09\x1e\x1f";
 
-fn do_sha256_crypt(pass: &str, salt: &str, rounds: Option<u32>) -> Result<String> {
+fn do_sha256_crypt(pass: &[u8], salt: &str, rounds: Option<u32>) -> Result<String> {
     sha2_crypt(pass, salt, rounds, Sha256::new, SHA256_TRANSPOSE, SHA256_MAGIC)
 }
 
@@ -71,9 +71,9 @@ fn do_sha256_crypt(pass: &str, salt: &str, rounds: Option<u32>) -> Result<String
 /// An error is returned if the system random number generator cannot
 /// be opened.
 #[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
-pub fn hash(pass: &str) -> Result<String> {
+pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
     let saltstr = random::gen_salt_str(MAX_SALT_LEN)?;
-    do_sha256_crypt(pass, &saltstr, None)
+    do_sha256_crypt(pass.as_ref(), &saltstr, None)
 }
 
 fn parse_sha256_hash(hash: &str) -> Result<HashSetup> {
@@ -88,12 +88,14 @@ fn parse_sha256_hash(hash: &str) -> Result<HashSetup> {
 /// an invalid character, an error is returned. An out-of-range rounds value
 /// will be coerced into the allowed range.
 #[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
-pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
-    sha2_hash_with(IHS::into_hash_setup(param, parse_sha256_hash)?, pass, do_sha256_crypt)
+pub fn hash_with<'a, IHS, B>(param: IHS, pass: B) -> Result<String>
+    where IHS: IntoHashSetup<'a>, B: AsRef<[u8]>
+{
+    sha2_hash_with(IHS::into_hash_setup(param, parse_sha256_hash)?, pass.as_ref(), do_sha256_crypt)
 }
 
 /// Verify that the hash corresponds to a password.
-pub fn verify(pass: &str, hash: &str) -> bool {
+pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
     #[allow(deprecated)]
     consteq(hash, hash_with(hash, pass))
 }

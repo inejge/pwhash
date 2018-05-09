@@ -54,24 +54,24 @@ pub const MAX_SALT_LEN: usize = 8;
 const MD5_MAGIC: &'static str = "$1$";
 const MD5_TRANSPOSE: &'static [u8] = b"\x0c\x06\x00\x0d\x07\x01\x0e\x08\x02\x0f\x09\x03\x05\x0a\x04\x0b";
 
-fn do_md5_crypt(pass: &str, salt: &str) -> Result<String> {
+fn do_md5_crypt(pass: &[u8], salt: &str) -> Result<String> {
     let mut dummy_buf = [0u8; 6];
     bcrypt_hash64_decode(salt, &mut dummy_buf)?;
 
     let mut dgst_b = Md5::new();
     let mut hash_b = [0u8; 16];
-    dgst_b.input(pass.as_bytes());
+    dgst_b.input(pass);
     dgst_b.input(salt.as_bytes());
-    dgst_b.input(pass.as_bytes());
+    dgst_b.input(pass);
     dgst_b.result(&mut hash_b);
 
     let mut dgst_a = Md5::new();
     let mut hash_a = [0u8; 16];
-    dgst_a.input(pass.as_bytes());
+    dgst_a.input(pass);
     dgst_a.input(MD5_MAGIC.as_bytes());
     dgst_a.input(salt.as_bytes());
 
-    let mut plen = pass.as_bytes().len();
+    let mut plen = pass.len();
     while plen > 0 {
 	dgst_a.input(&hash_b[..min(plen, 16)]);
 	if plen < 16 {
@@ -80,10 +80,10 @@ fn do_md5_crypt(pass: &str, salt: &str) -> Result<String> {
 	plen -= 16;
     }
 
-    plen = pass.as_bytes().len();
+    plen = pass.len();
     while plen > 0 {
 	match plen & 1 {
-	    0 => dgst_a.input(&pass.as_bytes()[..1]),
+	    0 => dgst_a.input(&pass[..1]),
 	    1 => dgst_a.input(&[0u8]),
 	    _ => unreachable!()
 	}
@@ -95,7 +95,7 @@ fn do_md5_crypt(pass: &str, salt: &str) -> Result<String> {
     for r in 0..1000 {
 	dgst_a.reset();
 	if r % 2 == 1 {
-	    dgst_a.input(pass.as_bytes());
+	    dgst_a.input(pass);
 	} else {
 	    dgst_a.input(&hash_a);
 	}
@@ -103,10 +103,10 @@ fn do_md5_crypt(pass: &str, salt: &str) -> Result<String> {
 	    dgst_a.input(salt.as_bytes());
 	}
 	if r % 7 > 0 {
-	    dgst_a.input(pass.as_bytes());
+	    dgst_a.input(pass);
 	}
 	if r % 2 == 0 {
-	    dgst_a.input(pass.as_bytes());
+	    dgst_a.input(pass);
 	} else {
 	    dgst_a.input(&hash_a);
 	}
@@ -124,9 +124,9 @@ fn do_md5_crypt(pass: &str, salt: &str) -> Result<String> {
 /// An error is returned if the system random number generator cannot
 /// be opened.
 #[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
-pub fn hash(pass: &str) -> Result<String> {
+pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
     let saltstr = random::gen_salt_str(MAX_SALT_LEN)?;
-    do_md5_crypt(pass, &saltstr)
+    do_md5_crypt(pass.as_ref(), &saltstr)
 }
 
 const MAGIC_LEN: usize = 3;
@@ -151,7 +151,9 @@ fn parse_md5_hash(hash: &str) -> Result<HashSetup> {
 /// If the salt is too long, it is truncated to maximum length. If it contains
 /// an invalid character, an error is returned.
 #[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
-pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
+pub fn hash_with<'a, IHS, B>(param: IHS, pass: B) -> Result<String>
+    where IHS: IntoHashSetup<'a>, B: AsRef<[u8]>
+{
     let hs = IHS::into_hash_setup(param, parse_md5_hash)?;
     if let Some(salt) = hs.salt {
 	let salt = if salt.len() <= MAX_SALT_LEN {
@@ -161,15 +163,15 @@ pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: I
 	} else {
 	    return Err(Error::InvalidHashString);
 	};
-	do_md5_crypt(pass, salt)
+	do_md5_crypt(pass.as_ref(), salt)
     } else {
 	let salt = random::gen_salt_str(MAX_SALT_LEN)?;
-	do_md5_crypt(pass, &salt)
+	do_md5_crypt(pass.as_ref(), &salt)
     }
 }
 
 /// Verify that the hash corresponds to a password.
-pub fn verify(pass: &str, hash: &str) -> bool {
+pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
     #[allow(deprecated)]
     consteq(hash, hash_with(hash, pass))
 }

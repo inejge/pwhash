@@ -24,7 +24,7 @@ pub const DEFAULT_ROUNDS: u32 = 5000;
 /// Maximum (and default) salt length.
 pub const MAX_SALT_LEN: usize = 16;
 
-pub fn sha2_crypt<D: Digest>(pass: &str, salt: &str, rounds: Option<u32>,
+pub fn sha2_crypt<D: Digest>(pass: &[u8], salt: &str, rounds: Option<u32>,
 			     new_digest: fn() -> D, trn_table: &[u8],
 			     magic: &str) -> Result<String> {
     let mut dummy_buf = [0u8; 12];
@@ -32,17 +32,17 @@ pub fn sha2_crypt<D: Digest>(pass: &str, salt: &str, rounds: Option<u32>,
 
     let mut dgst_b = new_digest();
     let dsize = dgst_b.output_bytes();
-    dgst_b.input_str(pass);
+    dgst_b.input(pass);
     dgst_b.input_str(salt);
-    dgst_b.input_str(pass);
+    dgst_b.input(pass);
     let mut hash_b = [0u8; 64];
     dgst_b.result(&mut hash_b);
 
     let mut dgst_a = new_digest();
-    dgst_a.input_str(pass);
+    dgst_a.input(pass);
     dgst_a.input_str(salt);
 
-    let plen = pass.as_bytes().len();
+    let plen = pass.len();
     let mut p = plen;
     while p > 0 {
 	dgst_a.input(&hash_b[..min(p, dsize)]);
@@ -55,7 +55,7 @@ pub fn sha2_crypt<D: Digest>(pass: &str, salt: &str, rounds: Option<u32>,
     p = plen;
     while p > 0 {
 	match p & 1 {
-	    0 => dgst_a.input_str(pass),
+	    0 => dgst_a.input(pass),
 	    1 => dgst_a.input(&hash_b[..dsize]),
 	    _ => unreachable!()
 	}
@@ -67,7 +67,7 @@ pub fn sha2_crypt<D: Digest>(pass: &str, salt: &str, rounds: Option<u32>,
 
     dgst_b.reset();
     for _ in 0..plen {
-	dgst_b.input_str(pass);
+	dgst_b.input(pass);
     }
     dgst_b.result(&mut hash_b);
     let mut seq_p = Vec::<u8>::with_capacity(((plen + dsize - 1) / dsize) * dsize);
@@ -147,7 +147,7 @@ pub fn parse_sha2_hash<'a>(hash: &'a str, magic: &str) -> Result<HashSetup<'a>> 
     Ok(HashSetup { salt: Some(salt), rounds: rounds })
 }
 
-pub fn sha2_hash_with(param: HashSetup, pass: &str, hf: fn(&str, &str, Option<u32>) -> Result<String>) -> Result<String> {
+pub fn sha2_hash_with(param: HashSetup, pass: &[u8], hf: fn(&[u8], &str, Option<u32>) -> Result<String>) -> Result<String> {
     let rounds = if let Some(r) = param.rounds {
 	if r < MIN_ROUNDS {
 	    Some(MIN_ROUNDS)

@@ -51,9 +51,9 @@ pub const SALT_LEN: usize = 2;
 /// An error is returned if the system random number generator cannot
 /// be opened.
 #[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
-pub fn hash(pass: &str) -> Result<String> {
+pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
     let saltstr = random::gen_salt_str(SALT_LEN)?;
-    unix_crypt(pass, &saltstr)
+    unix_crypt(pass.as_ref(), &saltstr)
 }
 
 /// Hash a password with a user-provided salt.
@@ -61,13 +61,13 @@ pub fn hash(pass: &str) -> Result<String> {
 /// An error is returned if the salt is too short or contains an invalid
 /// character.
 #[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
-pub fn hash_with(salt: &str, pass: &str) -> Result<String> {
-    unix_crypt(pass, salt)
+pub fn hash_with<B: AsRef<[u8]>>(salt: &str, pass: B) -> Result<String> {
+    unix_crypt(pass.as_ref(), salt)
 }
 
 /// Verify that the hash corresponds to a password.
-pub fn verify(pass: &str, hash: &str) -> bool {
-    consteq(hash, unix_crypt(pass, hash))
+pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
+    consteq(hash, unix_crypt(pass.as_ref(), hash))
 }
 
 #[cfg(test)]

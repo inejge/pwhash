@@ -204,8 +204,8 @@ impl<'a> Default for BcryptSetup<'a> {
     }
 }
 
-fn do_bcrypt(pass: &str, salt: &[u8], cost: u32, variant: BcryptVariant) -> Result<String> {
-    let mut upd_pass = pass.bytes().chain(iter::repeat(0u8)).take(min(pass.len() + 1, MAX_PASS_LEN)).collect::<Vec<_>>();
+fn do_bcrypt(pass: &[u8], salt: &[u8], cost: u32, variant: BcryptVariant) -> Result<String> {
+    let mut upd_pass = pass.iter().map(|b| *b).chain(iter::repeat(0u8)).take(min(pass.len() + 1, MAX_PASS_LEN)).collect::<Vec<_>>();
     let mut output = [0u8; 24];
     bcrypt(cost, &salt, &upd_pass[..], &mut output);
     for b in &mut upd_pass {
@@ -220,10 +220,10 @@ fn do_bcrypt(pass: &str, salt: &[u8], cost: u32, variant: BcryptVariant) -> Resu
 ///
 /// An error is returned if the system random number generator cannot
 /// be opened.
-pub fn hash(pass: &str) -> Result<String> {
+pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
     let mut salt_buf = [0u8; 16];
     random::gen_salt_bytes(&mut salt_buf)?;
-    do_bcrypt(pass, &salt_buf, DEFAULT_COST, DEFAULT_VARIANT)
+    do_bcrypt(pass.as_ref(), &salt_buf, DEFAULT_COST, DEFAULT_VARIANT)
 }
 
 /// Hash a password with user-provided parameters.
@@ -233,7 +233,9 @@ pub fn hash(pass: &str) -> Result<String> {
 /// will set the variant to default. The `Default` trait is implemented for
 /// `BcryptSetup`, which makes it easier to initialize just the desired
 /// fields (see the module-level example.)
-pub fn hash_with<'a, IBS>(param: IBS, pass: &str) -> Result<String> where IBS: IntoBcryptSetup<'a> {
+pub fn hash_with<'a, IBS, B>(param: IBS, pass: B) -> Result<String>
+    where IBS: IntoBcryptSetup<'a>, B: AsRef<[u8]>
+{
     let bs = param.into_bcrypt_setup()?;
     let cost = if let Some(c) = bs.cost {
 	if c < MIN_COST || c > MAX_COST {
@@ -250,11 +252,11 @@ pub fn hash_with<'a, IBS>(param: IBS, pass: &str) -> Result<String> where IBS: I
     } else {
 	random::gen_salt_bytes(&mut salt_buf)?;
     }
-    do_bcrypt(pass, &salt_buf, cost, variant)
+    do_bcrypt(pass.as_ref(), &salt_buf, cost, variant)
 }
 
 /// Verify that the hash corresponds to a password.
-pub fn verify(pass: &str, hash: &str) -> bool {
+pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
     consteq(hash, hash_with(hash, pass))
 }
 

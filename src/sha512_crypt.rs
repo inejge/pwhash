@@ -64,7 +64,7 @@ const SHA512_TRANSPOSE: &'static [u8] = b"\x2a\x15\x00\x01\x2b\x16\x17\x02\x2c\x
 					  \x1f\x20\x0b\x35\x36\x21\x0c\x0d\x37\x22\x23\x0e\x38\x39\x24\x0f\
 					  \x10\x3a\x25\x26\x11\x3b\x3c\x27\x12\x13\x3d\x28\x29\x14\x3e\x3f";
 
-fn do_sha512_crypt(pass: &str, salt: &str, rounds: Option<u32>) -> Result<String> {
+fn do_sha512_crypt(pass: &[u8], salt: &str, rounds: Option<u32>) -> Result<String> {
     sha2_crypt(pass, salt, rounds, Sha512::new, SHA512_TRANSPOSE, SHA512_MAGIC)
 }
 
@@ -73,9 +73,9 @@ fn do_sha512_crypt(pass: &str, salt: &str, rounds: Option<u32>) -> Result<String
 ///
 /// An error is returned if the system random number generator cannot
 /// be opened.
-pub fn hash(pass: &str) -> Result<String> {
+pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
     let saltstr = random::gen_salt_str(MAX_SALT_LEN)?;
-    do_sha512_crypt(pass, &saltstr, None)
+    do_sha512_crypt(pass.as_ref(), &saltstr, None)
 }
 
 fn parse_sha512_hash(hash: &str) -> Result<HashSetup> {
@@ -89,12 +89,14 @@ fn parse_sha512_hash(hash: &str) -> Result<HashSetup> {
 /// If the salt is too long, it is truncated to maximum length. If it contains
 /// an invalid character, an error is returned. An out-of-range rounds value
 /// will be coerced into the allowed range.
-pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
-    sha2_hash_with(IHS::into_hash_setup(param, parse_sha512_hash)?, pass, do_sha512_crypt)
+pub fn hash_with<'a, IHS, B>(param: IHS, pass: B) -> Result<String>
+    where IHS: IntoHashSetup<'a>, B: AsRef<[u8]>
+{
+    sha2_hash_with(IHS::into_hash_setup(param, parse_sha512_hash)?, pass.as_ref(), do_sha512_crypt)
 }
 
 /// Verify that the hash corresponds to a password.
-pub fn verify(pass: &str, hash: &str) -> bool {
+pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
     consteq(hash, hash_with(hash, pass))
 }
 

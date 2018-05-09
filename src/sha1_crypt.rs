@@ -63,10 +63,10 @@ const MAX_SALT_LEN: usize = 64;
 /// Default salt length.
 pub const DEFAULT_SALT_LEN: usize = 8;
 
-fn do_sha1_crypt(pass: &str, salt: &str, rounds: u32) -> Result<String> {
+fn do_sha1_crypt(pass: &[u8], salt: &str, rounds: u32) -> Result<String> {
     let mut dummy_buf = [0u8; 48];
     bcrypt_hash64_decode(salt, &mut dummy_buf)?;
-    let mut hmac = Hmac::new(Sha1::new(), pass.as_bytes());
+    let mut hmac = Hmac::new(Sha1::new(), pass);
     hmac.input(format!("{}$sha1${}", salt, rounds).as_bytes());
     let mut result = hmac.result();
     for _ in 1..rounds {
@@ -82,9 +82,9 @@ fn do_sha1_crypt(pass: &str, salt: &str, rounds: u32) -> Result<String> {
 ///
 /// An error is returned if the system random number generator cannot
 /// be opened.
-pub fn hash(pass: &str) -> Result<String> {
+pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
     let saltstr = random::gen_salt_str(DEFAULT_SALT_LEN)?;
-    do_sha1_crypt(pass, &saltstr, random::vary_rounds(DEFAULT_ROUNDS))
+    do_sha1_crypt(pass.as_ref(), &saltstr, random::vary_rounds(DEFAULT_ROUNDS))
 }
 
 const MAGIC_LEN: usize = 6;
@@ -115,7 +115,9 @@ fn parse_sha1_hash(hash: &str) -> Result<HashSetup> {
 /// If the salt is too long, it is truncated to maximum length. If it contains
 /// an invalid character, an error is returned. An out-of-range rounds value
 /// will also result in an error.
-pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: IntoHashSetup<'a> {
+pub fn hash_with<'a, IHS, B>(param: IHS, pass: B) -> Result<String>
+    where IHS: IntoHashSetup<'a>, B: AsRef<[u8]>
+{
     let hs = IHS::into_hash_setup(param, parse_sha1_hash)?;
     let rounds = if let Some(r) = hs.rounds {
 	if r < MIN_ROUNDS {
@@ -131,15 +133,15 @@ pub fn hash_with<'a, IHS>(param: IHS, pass: &str) -> Result<String> where IHS: I
 	} else {
 	    return Err(Error::InvalidHashString);
 	};
-	do_sha1_crypt(pass, salt, rounds)
+	do_sha1_crypt(pass.as_ref(), salt, rounds)
     } else {
 	let salt = random::gen_salt_str(DEFAULT_SALT_LEN)?;
-	do_sha1_crypt(pass, &salt, rounds)
+	do_sha1_crypt(pass.as_ref(), &salt, rounds)
     }
 }
 
 /// Verify that the hash corresponds to a password.
-pub fn verify(pass: &str, hash: &str) -> bool {
+pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
     consteq(hash, hash_with(hash, pass))
 }
 
