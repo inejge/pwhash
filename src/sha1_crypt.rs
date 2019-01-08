@@ -45,9 +45,8 @@
 //!
 //! * *`{checksum}`* is a 28-character Base64 encoding of the checksum.
 
-use crypto::mac::Mac;
-use crypto::hmac::Hmac;
-use crypto::sha1::Sha1;
+use hmac::{Hmac, Mac};
+use sha1::Sha1;
 use super::{Result, HashSetup, IntoHashSetup, consteq};
 use enc_dec::{sha1crypt_hash64_encode, bcrypt_hash64_decode};
 use error::Error;
@@ -66,15 +65,14 @@ pub const DEFAULT_SALT_LEN: usize = 8;
 fn do_sha1_crypt(pass: &[u8], salt: &str, rounds: u32) -> Result<String> {
     let mut dummy_buf = [0u8; 48];
     bcrypt_hash64_decode(salt, &mut dummy_buf)?;
-    let mut hmac = Hmac::new(Sha1::new(), pass);
+    let mut hmac = Hmac::<Sha1>::new_varkey(pass).map_err(|_| Error::InsufficientLength)?;
     hmac.input(format!("{}$sha1${}", salt, rounds).as_bytes());
-    let mut result = hmac.result();
+    let mut result = hmac.result_reset();
     for _ in 1..rounds {
-	hmac.reset();
-	hmac.input(result.code());
-	result = hmac.result();
+	hmac.input(&result.code());
+	result = hmac.result_reset();
     }
-    Ok(format!("$sha1${}${}${}", rounds, salt, sha1crypt_hash64_encode(result.code())))
+    Ok(format!("$sha1${}${}${}", rounds, salt, sha1crypt_hash64_encode(&result.code())))
 }
 
 /// Hash a password with a randomly generated salt and the default

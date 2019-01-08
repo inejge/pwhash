@@ -91,6 +91,8 @@
 extern crate rand;
 extern crate crypto;
 extern crate md5;
+extern crate sha1;
+extern crate hmac;
 
 mod enc_dec;
 pub mod error;

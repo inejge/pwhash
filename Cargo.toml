@@ -14,4 +14,6 @@ categories = ["cryptography", "authentication"]
 [dependencies]
 rust-crypto = "0.2"
 md-5 = "0.8.0"
+sha-1 = "0.8.1"
+hmac = "0.7.0"
 rand = "0.3"
