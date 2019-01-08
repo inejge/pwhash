@@ -47,7 +47,7 @@
 //! The format __`$5$`__*`{salt}`*__$__*`{checksum}`* can be used if
 //! the default number of rounds is chosen.
 
-use crypto::sha2::Sha256;
+use sha2::Sha256;
 use super::{Result, HashSetup, IntoHashSetup, consteq};
 use random;
 use sha2_crypt::{sha2_crypt, parse_sha2_hash, sha2_hash_with};
@@ -62,7 +62,7 @@ const SHA256_TRANSPOSE: &'static [u8] = b"\x14\x0a\x00\x0b\x01\x15\x02\x16\x0c\x
 					  \x19\x0f\x1a\x10\x06\x11\x07\x1b\x08\x1c\x12\x1d\x13\x09\x1e\x1f";
 
 fn do_sha256_crypt(pass: &[u8], salt: &str, rounds: Option<u32>) -> Result<String> {
-    sha2_crypt(pass, salt, rounds, Sha256::new, SHA256_TRANSPOSE, SHA256_MAGIC)
+    sha2_crypt(pass, salt, rounds, Sha256::default, SHA256_TRANSPOSE, SHA256_MAGIC)
 }
 
 /// Hash a password with a randomly generated salt and the default

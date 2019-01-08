@@ -8,7 +8,7 @@
 // license.
 
 use std::cmp::min;
-use crypto::digest::Digest;
+use sha2::Digest;
 use enc_dec::{md5_sha2_hash64_encode, bcrypt_hash64_decode};
 use super::{Result, HashSetup};
 use error::Error;
@@ -31,16 +31,15 @@ pub fn sha2_crypt<D: Digest>(pass: &[u8], salt: &str, rounds: Option<u32>,
     bcrypt_hash64_decode(salt, &mut dummy_buf)?;
 
     let mut dgst_b = new_digest();
-    let dsize = dgst_b.output_bytes();
+    let dsize = D::output_size();
     dgst_b.input(pass);
-    dgst_b.input_str(salt);
+    dgst_b.input(salt.as_bytes());
     dgst_b.input(pass);
-    let mut hash_b = [0u8; 64];
-    dgst_b.result(&mut hash_b);
+    let mut hash_b = dgst_b.result_reset();
 
     let mut dgst_a = new_digest();
     dgst_a.input(pass);
-    dgst_a.input_str(salt);
+    dgst_a.input(salt.as_bytes());
 
     let plen = pass.len();
     let mut p = plen;
@@ -62,14 +61,13 @@ pub fn sha2_crypt<D: Digest>(pass: &[u8], salt: &str, rounds: Option<u32>,
 	p >>= 1;
     }
 
-    let mut hash_a = [0u8; 64];
-    dgst_a.result(&mut hash_a);
+    let mut hash_a = dgst_a.result_reset();
 
     dgst_b.reset();
     for _ in 0..plen {
 	dgst_b.input(pass);
     }
-    dgst_b.result(&mut hash_b);
+    hash_b = dgst_b.result_reset();
     let mut seq_p = Vec::<u8>::with_capacity(((plen + dsize - 1) / dsize) * dsize);
     p = plen;
     while p > 0 {
@@ -80,11 +78,10 @@ pub fn sha2_crypt<D: Digest>(pass: &[u8], salt: &str, rounds: Option<u32>,
 	p -= dsize;
     }
 
-    dgst_b.reset();
     for _ in 0..MAX_SALT_LEN+(hash_a[0] as usize) {
-	dgst_b.input_str(salt);
+	dgst_b.input(salt.as_bytes());
     }
-    dgst_b.result(&mut hash_b);
+    hash_b = dgst_b.result();
     let mut seq_s = Vec::<u8>::with_capacity(MAX_SALT_LEN);
     seq_s.extend(&hash_b[..salt.len()]);
 
@@ -106,7 +103,7 @@ pub fn sha2_crypt<D: Digest>(pass: &[u8], salt: &str, rounds: Option<u32>,
 	} else {
 	    dgst_a.input(&seq_p[..]);
 	}
-	dgst_a.result(&mut hash_a);
+	hash_a = dgst_a.result_reset();
     }
     for (i, &ti) in trn_table.iter().enumerate() {
 	hash_b[i] = hash_a[ti as usize];
