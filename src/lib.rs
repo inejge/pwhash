@@ -90,6 +90,7 @@
 
 extern crate rand;
 extern crate crypto;
+extern crate md5;
 
 mod enc_dec;
 pub mod error;

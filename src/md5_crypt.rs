@@ -40,8 +40,7 @@
 //!
 //! * *`{checksum}`* is a 22-character Base64 encoding of the checksum.
 
-use crypto::md5::Md5;
-use crypto::digest::Digest;
+use md5::{Md5, Digest};
 use super::{Result, HashSetup, IntoHashSetup, consteq};
 use error::Error;
 use random;
@@ -59,14 +58,12 @@ fn do_md5_crypt(pass: &[u8], salt: &str) -> Result<String> {
     bcrypt_hash64_decode(salt, &mut dummy_buf)?;
 
     let mut dgst_b = Md5::new();
-    let mut hash_b = [0u8; 16];
     dgst_b.input(pass);
     dgst_b.input(salt.as_bytes());
     dgst_b.input(pass);
-    dgst_b.result(&mut hash_b);
+    let mut hash_b = dgst_b.result();
 
     let mut dgst_a = Md5::new();
-    let mut hash_a = [0u8; 16];
     dgst_a.input(pass);
     dgst_a.input(MD5_MAGIC.as_bytes());
     dgst_a.input(salt.as_bytes());
@@ -90,10 +87,9 @@ fn do_md5_crypt(pass: &[u8], salt: &str) -> Result<String> {
 	plen >>= 1;
     }
 
-    dgst_a.result(&mut hash_a);
+    let mut hash_a = dgst_a.result_reset();
 
     for r in 0..1000 {
-	dgst_a.reset();
 	if r % 2 == 1 {
 	    dgst_a.input(pass);
 	} else {
@@ -110,7 +106,7 @@ fn do_md5_crypt(pass: &[u8], salt: &str) -> Result<String> {
 	} else {
 	    dgst_a.input(&hash_a);
 	}
-	dgst_a.result(&mut hash_a);
+	hash_a = dgst_a.result_reset();
     }
 
     for (i, &ti) in MD5_TRANSPOSE.iter().enumerate() {
