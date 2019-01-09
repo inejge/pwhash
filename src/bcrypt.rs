@@ -71,7 +71,8 @@ use parse::{self, HashIterator};
 use std::{iter, fmt};
 use std::cmp::min;
 use std::default::Default;
-use crypto::bcrypt::bcrypt;
+use blowfish::Blowfish;
+use byteorder::{BE, ByteOrder};
 
 const MAX_PASS_LEN: usize = 72;
 const DEFAULT_VARIANT: BcryptVariant = BcryptVariant::V2b;
@@ -201,6 +202,32 @@ impl<'a> IntoBcryptSetup<'a> for BcryptSetup<'a> {
 impl<'a> Default for BcryptSetup<'a> {
     fn default() -> Self {
 	BcryptSetup { salt: None, cost: Some(DEFAULT_COST), variant: Some(DEFAULT_VARIANT) }
+    }
+}
+
+fn bcrypt(cost: u32, salt: &[u8], password: &[u8], output: &mut [u8]) {
+    assert!(cost < 32);
+    assert!(salt.len() == 16);
+    assert!(0 < password.len() && password.len() <= 72);
+    assert!(output.len() == 24);
+
+    let mut state = Blowfish::bc_init_state();
+
+    state.salted_expand_key(salt, password);
+    for _ in 0..1u32 << cost {
+        state.bc_expand_key(password);
+        state.bc_expand_key(salt);
+    }
+
+    let mut ctext = [0x4f727068, 0x65616e42, 0x65686f6c, 0x64657253, 0x63727944, 0x6f756274];
+    for i in (0..6).step_by(2) {
+        for _ in 0..64 {
+            let (l, r) = state.bc_encrypt(ctext[i], ctext[i+1]);
+            ctext[i] = l;
+            ctext[i+1] = r;
+        }
+        BE::write_u32(&mut output[i*4..(i+1)*4], ctext[i]);
+        BE::write_u32(&mut output[(i+1)*4..(i+2)*4], ctext[i+1]);
     }
 }
 

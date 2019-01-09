@@ -16,5 +16,7 @@ rust-crypto = "0.2"
 md-5 = "0.8.0"
 sha-1 = "0.8.1"
 sha2 = "0.8.0"
+blowfish = { version = "0.4.0", features = ["bcrypt"] }
 hmac = "0.7.0"
+byteorder = "1"
 rand = "0.3"

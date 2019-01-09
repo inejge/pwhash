@@ -93,7 +93,9 @@ extern crate crypto;
 extern crate md5;
 extern crate sha1;
 extern crate sha2;
+extern crate blowfish;
 extern crate hmac;
+extern crate byteorder;
 
 mod enc_dec;
 pub mod error;
