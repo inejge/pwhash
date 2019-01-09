@@ -188,14 +188,15 @@ fn consteq(hash: &str, calchash: Result<String>) -> bool {
 
 mod random {
     use rand::{Rng, random};
-    use rand::os::OsRng;
-    use super::Result;
+    use rand::rngs::OsRng;
+    use rand::distributions::Standard;
+    use super::{Result, error::Error};
     use enc_dec::bcrypt_hash64_encode;
 
     pub fn gen_salt_str(chars: usize) -> Result<String> {
-	let mut rng = OsRng::new()?;
+	let mut rng = OsRng::new().map_err(|e| Error::RandomError(e.to_string()))?;
 	let bytes = ((chars + 3) / 4) * 3;
-	let rv = rng.gen_iter::<u8>().take(bytes).collect::<Vec<_>>();
+	let rv = rng.sample_iter(&Standard).take(bytes).collect::<Vec<u8>>();
 	let mut sstr = bcrypt_hash64_encode(&rv);
 	while sstr.len() > chars {
 	    sstr.pop();
@@ -204,8 +205,8 @@ mod random {
     }
 
     pub fn gen_salt_bytes(bytes: &mut [u8]) -> Result<()> {
-	let mut rng = OsRng::new()?;
-	rng.fill_bytes(bytes);
+	let mut rng = OsRng::new().map_err(|e| Error::RandomError(e.to_string()))?;
+	rng.fill(bytes);
 	Ok(())
     }
 

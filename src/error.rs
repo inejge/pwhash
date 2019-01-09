@@ -9,14 +9,14 @@
 //!
 //! For simplicity, there's no provision for recording the cause of any
 //! errors except I/O errors when opening the system entropy source.
-use std::{io, fmt};
+use std::fmt;
 use std::error::Error as StdError;
 
 /// Possible errors.
 #[derive(Debug)]
 pub enum Error {
-    /// The system entropy source couldn't be opened.
-    Io(io::Error),
+    /// Random value cannot be generated.
+    RandomError(String),
     /// Some component of the hash string contains an invalid character.
     EncodingError,
     /// An encoded value is too short.
@@ -30,7 +30,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	match *self {
-	    Error::Io(ref err) => write!(f, "{}", err),
+	    Error::RandomError(ref err) => write!(f, "{}", err),
 	    _ => write!(f, "{}", self.description()),
 	}
     }
@@ -39,22 +39,11 @@ impl fmt::Display for Error {
 impl StdError for Error {
     fn description(&self) -> &str {
 	match *self {
-	    Error::Io(_) => "I/O error",
+	    Error::RandomError(_) => "Random value cannot be generated",
 	    Error::EncodingError => "Invalid encoding",
 	    Error::InsufficientLength => "Encoded value is too short",
 	    Error::InvalidRounds => "Invalid rounds value",
 	    Error::InvalidHashString => "Invalid hash string",
 	}
     }
-
-    fn cause(&self) -> Option<&StdError> {
-	match *self {
-	    Error::Io(ref err) => Some(err),
-	    _ => None,
-	}
-    }
-}
-
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error { Error::Io(err) }
 }
