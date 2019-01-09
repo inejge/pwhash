@@ -12,7 +12,6 @@ keywords = ["password", "hash", "hashing", "crypt"]
 categories = ["cryptography", "authentication"]
 
 [dependencies]
-rust-crypto = "0.2"
 md-5 = "0.8.0"
 sha-1 = "0.8.1"
 sha2 = "0.8.0"
