@@ -16,7 +16,7 @@
 //! Add the following to the `[dependencies]` section of your `Cargo.toml`:
 //!
 //! ```toml
-//! pwhash = "0.2"
+//! pwhash = "0.3"
 //! ```
 //!
 //! Also, import the crate to your crate root:
