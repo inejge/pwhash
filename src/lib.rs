@@ -190,24 +190,20 @@ mod random {
     use rand::{Rng, random};
     use rand::rngs::OsRng;
     use rand::distributions::Standard;
-    use super::{Result, error::Error};
     use enc_dec::bcrypt_hash64_encode;
 
-    pub fn gen_salt_str(chars: usize) -> Result<String> {
-	let mut rng = OsRng::new().map_err(|e| Error::RandomError(e.to_string()))?;
+    pub fn gen_salt_str(chars: usize) -> String {
 	let bytes = ((chars + 3) / 4) * 3;
-	let rv = rng.sample_iter(&Standard).take(bytes).collect::<Vec<u8>>();
+	let rv = OsRng.sample_iter(&Standard).take(bytes).collect::<Vec<u8>>();
 	let mut sstr = bcrypt_hash64_encode(&rv);
 	while sstr.len() > chars {
 	    sstr.pop();
 	}
-	Ok(sstr)
+	sstr
     }
 
-    pub fn gen_salt_bytes(bytes: &mut [u8]) -> Result<()> {
-	let mut rng = OsRng::new().map_err(|e| Error::RandomError(e.to_string()))?;
-	rng.fill(bytes);
-	Ok(())
+    pub fn gen_salt_bytes(bytes: &mut [u8]) {
+	OsRng.fill(bytes);
     }
 
     pub fn vary_rounds(ceil: u32) -> u32 {

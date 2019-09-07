@@ -72,7 +72,7 @@ fn do_sha256_crypt(pass: &[u8], salt: &str, rounds: Option<u32>) -> Result<Strin
 /// be opened.
 #[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
 pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
-    let saltstr = random::gen_salt_str(MAX_SALT_LEN)?;
+    let saltstr = random::gen_salt_str(MAX_SALT_LEN);
     do_sha256_crypt(pass.as_ref(), &saltstr, None)
 }
 

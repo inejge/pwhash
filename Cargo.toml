@@ -18,4 +18,4 @@ sha2 = "0.8.0"
 blowfish = { version = "0.4.0", features = ["bcrypt"] }
 hmac = "0.7.0"
 byteorder = "1"
-rand = "0.6"
+rand = "0.7"

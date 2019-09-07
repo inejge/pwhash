@@ -249,7 +249,7 @@ fn do_bcrypt(pass: &[u8], salt: &[u8], cost: u32, variant: BcryptVariant) -> Res
 /// be opened.
 pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
     let mut salt_buf = [0u8; 16];
-    random::gen_salt_bytes(&mut salt_buf)?;
+    random::gen_salt_bytes(&mut salt_buf);
     do_bcrypt(pass.as_ref(), &salt_buf, DEFAULT_COST, DEFAULT_VARIANT)
 }
 
@@ -277,7 +277,7 @@ pub fn hash_with<'a, IBS, B>(param: IBS, pass: B) -> Result<String>
     if bs.salt.is_some() {
 	bcrypt_hash64_decode(bs.salt.unwrap(), &mut salt_buf)?;
     } else {
-	random::gen_salt_bytes(&mut salt_buf)?;
+	random::gen_salt_bytes(&mut salt_buf);
     }
     do_bcrypt(pass.as_ref(), &salt_buf, cost, variant)
 }

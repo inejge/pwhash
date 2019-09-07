@@ -74,7 +74,7 @@ fn do_sha512_crypt(pass: &[u8], salt: &str, rounds: Option<u32>) -> Result<Strin
 /// An error is returned if the system random number generator cannot
 /// be opened.
 pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
-    let saltstr = random::gen_salt_str(MAX_SALT_LEN)?;
+    let saltstr = random::gen_salt_str(MAX_SALT_LEN);
     do_sha512_crypt(pass.as_ref(), &saltstr, None)
 }
 

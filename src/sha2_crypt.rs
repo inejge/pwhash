@@ -164,7 +164,7 @@ pub fn sha2_hash_with(param: HashSetup, pass: &[u8], hf: fn(&[u8], &str, Option<
 	};
 	hf(pass, salt, rounds)
     } else {
-	let salt = random::gen_salt_str(MAX_SALT_LEN)?;
+	let salt = random::gen_salt_str(MAX_SALT_LEN);
 	hf(pass, &salt, rounds)
     }
 }

@@ -121,7 +121,7 @@ fn do_md5_crypt(pass: &[u8], salt: &str) -> Result<String> {
 /// be opened.
 #[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
 pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
-    let saltstr = random::gen_salt_str(MAX_SALT_LEN)?;
+    let saltstr = random::gen_salt_str(MAX_SALT_LEN);
     do_md5_crypt(pass.as_ref(), &saltstr)
 }
 
@@ -161,7 +161,7 @@ pub fn hash_with<'a, IHS, B>(param: IHS, pass: B) -> Result<String>
 	};
 	do_md5_crypt(pass.as_ref(), salt)
     } else {
-	let salt = random::gen_salt_str(MAX_SALT_LEN)?;
+	let salt = random::gen_salt_str(MAX_SALT_LEN);
 	do_md5_crypt(pass.as_ref(), &salt)
     }
 }

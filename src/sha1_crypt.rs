@@ -81,7 +81,7 @@ fn do_sha1_crypt(pass: &[u8], salt: &str, rounds: u32) -> Result<String> {
 /// An error is returned if the system random number generator cannot
 /// be opened.
 pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
-    let saltstr = random::gen_salt_str(DEFAULT_SALT_LEN)?;
+    let saltstr = random::gen_salt_str(DEFAULT_SALT_LEN);
     do_sha1_crypt(pass.as_ref(), &saltstr, random::vary_rounds(DEFAULT_ROUNDS))
 }
 
@@ -133,7 +133,7 @@ pub fn hash_with<'a, IHS, B>(param: IHS, pass: B) -> Result<String>
 	};
 	do_sha1_crypt(pass.as_ref(), salt, rounds)
     } else {
-	let salt = random::gen_salt_str(DEFAULT_SALT_LEN)?;
+	let salt = random::gen_salt_str(DEFAULT_SALT_LEN);
 	do_sha1_crypt(pass.as_ref(), &salt, rounds)
     }
 }

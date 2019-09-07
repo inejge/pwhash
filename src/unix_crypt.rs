@@ -52,7 +52,7 @@ pub const SALT_LEN: usize = 2;
 /// be opened.
 #[deprecated(since="0.2.0", note="don't use this algorithm for new passwords")]
 pub fn hash<B: AsRef<[u8]>>(pass: B) -> Result<String> {
-    let saltstr = random::gen_salt_str(SALT_LEN)?;
+    let saltstr = random::gen_salt_str(SALT_LEN);
     unix_crypt(pass.as_ref(), &saltstr)
 }
 
