@@ -32,19 +32,19 @@ pub fn sha2_crypt<D: Digest>(pass: &[u8], salt: &str, rounds: Option<u32>,
 
     let mut dgst_b = new_digest();
     let dsize = D::output_size();
-    dgst_b.input(pass);
-    dgst_b.input(salt.as_bytes());
-    dgst_b.input(pass);
-    let mut hash_b = dgst_b.result_reset();
+    dgst_b.update(pass);
+    dgst_b.update(salt.as_bytes());
+    dgst_b.update(pass);
+    let mut hash_b = dgst_b.finalize();
 
     let mut dgst_a = new_digest();
-    dgst_a.input(pass);
-    dgst_a.input(salt.as_bytes());
+    dgst_a.update(pass);
+    dgst_a.update(salt.as_bytes());
 
     let plen = pass.len();
     let mut p = plen;
     while p > 0 {
-	dgst_a.input(&hash_b[..min(p, dsize)]);
+	dgst_a.update(&hash_b[..min(p, dsize)]);
 	if p < dsize {
 	    break;
 	}
@@ -54,20 +54,21 @@ pub fn sha2_crypt<D: Digest>(pass: &[u8], salt: &str, rounds: Option<u32>,
     p = plen;
     while p > 0 {
 	match p & 1 {
-	    0 => dgst_a.input(pass),
-	    1 => dgst_a.input(&hash_b[..dsize]),
+	    0 => dgst_a.update(pass),
+	    1 => dgst_a.update(&hash_b[..dsize]),
 	    _ => unreachable!()
 	}
 	p >>= 1;
     }
 
-    let mut hash_a = dgst_a.result_reset();
+    let mut hash_a = dgst_a.finalize();
 
-    dgst_b.reset();
+    let mut dgst_b = new_digest();
     for _ in 0..plen {
-	dgst_b.input(pass);
+	dgst_b.update(pass);
     }
-    hash_b = dgst_b.result_reset();
+    hash_b = dgst_b.finalize();
+    let mut dgst_b = new_digest();
     let mut seq_p = Vec::<u8>::with_capacity(((plen + dsize - 1) / dsize) * dsize);
     p = plen;
     while p > 0 {
@@ -79,31 +80,31 @@ pub fn sha2_crypt<D: Digest>(pass: &[u8], salt: &str, rounds: Option<u32>,
     }
 
     for _ in 0..MAX_SALT_LEN+(hash_a[0] as usize) {
-	dgst_b.input(salt.as_bytes());
+	dgst_b.update(salt.as_bytes());
     }
-    hash_b = dgst_b.result();
+    hash_b = dgst_b.finalize();
     let mut seq_s = Vec::<u8>::with_capacity(MAX_SALT_LEN);
     seq_s.extend(&hash_b[..salt.len()]);
 
     for r in 0..rounds.unwrap_or(DEFAULT_ROUNDS) {
-	dgst_a.reset();
+	let mut dgst_a = new_digest();
 	if r % 2 == 1 {
-	    dgst_a.input(&seq_p[..]);
+	    dgst_a.update(&seq_p[..]);
 	} else {
-	    dgst_a.input(&hash_a[..dsize]);
+	    dgst_a.update(&hash_a[..dsize]);
 	}
 	if r % 3 > 0 {
-	    dgst_a.input(&seq_s[..]);
+	    dgst_a.update(&seq_s[..]);
 	}
 	if r % 7 > 0 {
-	    dgst_a.input(&seq_p[..]);
+	    dgst_a.update(&seq_p[..]);
 	}
 	if r % 2 == 1 {
-	    dgst_a.input(&hash_a[..dsize]);
+	    dgst_a.update(&hash_a[..dsize]);
 	} else {
-	    dgst_a.input(&seq_p[..]);
+	    dgst_a.update(&seq_p[..]);
 	}
-	hash_a = dgst_a.result_reset();
+	hash_a = dgst_a.finalize();
     }
     for (i, &ti) in trn_table.iter().enumerate() {
 	hash_b[i] = hash_a[ti as usize];

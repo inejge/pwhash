@@ -12,10 +12,10 @@ keywords = ["password", "hash", "hashing", "crypt"]
 categories = ["cryptography", "authentication"]
 
 [dependencies]
-md-5 = "0.8.0"
-sha-1 = "0.8.1"
-sha2 = "0.8.0"
-blowfish = { version = "0.4.0", features = ["bcrypt"] }
-hmac = "0.7.0"
+md-5 = "0.9"
+sha-1 = "0.9"
+sha2 = "0.9"
+blowfish = { version = "0.5", features = ["bcrypt"] }
+hmac = "0.8"
 byteorder = "1"
 rand = "0.7"

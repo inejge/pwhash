@@ -29,21 +29,14 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-	match *self {
-	    Error::RandomError(ref err) => write!(f, "{}", err),
-	    _ => write!(f, "{}", self.description()),
-	}
+        match *self {
+            Error::RandomError(ref err) => write!(f, "{}", err),
+            Error::EncodingError => write!(f, "Invalid encoding"),
+            Error::InsufficientLength => write!(f, "Encoded value is too short"),
+            Error::InvalidRounds => write!(f, "Invalid rounds value"),
+            Error::InvalidHashString => write!(f, "Invalid hash string"),
+        }
     }
 }
 
-impl StdError for Error {
-    fn description(&self) -> &str {
-	match *self {
-	    Error::RandomError(_) => "Random value cannot be generated",
-	    Error::EncodingError => "Invalid encoding",
-	    Error::InsufficientLength => "Encoded value is too short",
-	    Error::InvalidRounds => "Invalid rounds value",
-	    Error::InvalidHashString => "Invalid hash string",
-	}
-    }
-}
+impl StdError for Error {}

@@ -58,19 +58,19 @@ fn do_md5_crypt(pass: &[u8], salt: &str) -> Result<String> {
     bcrypt_hash64_decode(salt, &mut dummy_buf)?;
 
     let mut dgst_b = Md5::new();
-    dgst_b.input(pass);
-    dgst_b.input(salt.as_bytes());
-    dgst_b.input(pass);
-    let mut hash_b = dgst_b.result();
+    dgst_b.update(pass);
+    dgst_b.update(salt.as_bytes());
+    dgst_b.update(pass);
+    let mut hash_b = dgst_b.finalize();
 
     let mut dgst_a = Md5::new();
-    dgst_a.input(pass);
-    dgst_a.input(MD5_MAGIC.as_bytes());
-    dgst_a.input(salt.as_bytes());
+    dgst_a.update(pass);
+    dgst_a.update(MD5_MAGIC.as_bytes());
+    dgst_a.update(salt.as_bytes());
 
     let mut plen = pass.len();
     while plen > 0 {
-	dgst_a.input(&hash_b[..min(plen, 16)]);
+	dgst_a.update(&hash_b[..min(plen, 16)]);
 	if plen < 16 {
 	    break;
 	}
@@ -80,33 +80,34 @@ fn do_md5_crypt(pass: &[u8], salt: &str) -> Result<String> {
     plen = pass.len();
     while plen > 0 {
 	match plen & 1 {
-	    0 => dgst_a.input(&pass[..1]),
-	    1 => dgst_a.input(&[0u8]),
+	    0 => dgst_a.update(&pass[..1]),
+	    1 => dgst_a.update(&[0u8]),
 	    _ => unreachable!()
 	}
 	plen >>= 1;
     }
 
-    let mut hash_a = dgst_a.result_reset();
+    let mut hash_a = dgst_a.finalize();
 
     for r in 0..1000 {
+	let mut dgst_a = Md5::new();
 	if r % 2 == 1 {
-	    dgst_a.input(pass);
+	    dgst_a.update(pass);
 	} else {
-	    dgst_a.input(&hash_a);
+	    dgst_a.update(&hash_a);
 	}
 	if r % 3 > 0 {
-	    dgst_a.input(salt.as_bytes());
+	    dgst_a.update(salt.as_bytes());
 	}
 	if r % 7 > 0 {
-	    dgst_a.input(pass);
+	    dgst_a.update(pass);
 	}
 	if r % 2 == 0 {
-	    dgst_a.input(pass);
+	    dgst_a.update(pass);
 	} else {
-	    dgst_a.input(&hash_a);
+	    dgst_a.update(&hash_a);
 	}
-	hash_a = dgst_a.result_reset();
+	hash_a = dgst_a.finalize();
     }
 
     for (i, &ti) in MD5_TRANSPOSE.iter().enumerate() {
