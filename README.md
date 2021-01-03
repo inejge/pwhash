@@ -1,30 +1,20 @@
 # pwhash
 
-[![Build Status](https://travis-ci.org/inejge/pwhash.svg?branch=master)](https://travis-ci.org/inejge/pwhash)
-
 A collection of password hashing and verification routines.
 
-See the [documentation](https://inejge.github.io/pwhash) for API reference.
+See the [documentation](https://docs.rs/pwhash/1.0.0/pwhash/) for API reference.
 
 ## Getting Started
 
 Add the following to the `[dependencies]` section of your `Cargo.toml`:
 
 ```toml
-pwhash = "0.3"
-```
-
-Also, import the crate in your crate root:
-
-```rust
-extern crate pwhash;
+pwhash = "1"
 ```
 
 ## Example
 
 ```rust
-extern crate pwhash;
-
 use pwhash::bcrypt;
 
 // Hash a password with default parameters.

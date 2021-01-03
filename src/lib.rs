@@ -16,7 +16,7 @@
 //! Add the following to the `[dependencies]` section of your `Cargo.toml`:
 //!
 //! ```toml
-//! pwhash = "0.3"
+//! pwhash = "1"
 //! ```
 //!
 //! # Examples
