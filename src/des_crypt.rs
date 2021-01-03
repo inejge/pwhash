@@ -553,7 +553,7 @@ use std::iter;
 use enc_dec::{crypt_hash64_encode,decode_val,encode_val};
 
 fn secret_to_key(key: &[u8]) -> u64 {
-    key.into_iter().chain(iter::repeat(&0u8)).take(8).fold(0u64, |kw, b| (kw << 8) | (b << 1) as u64)
+    key.iter().chain(iter::repeat(&0u8)).take(8).fold(0u64, |kw, b| (kw << 8) | (b << 1) as u64)
 }
 
 fn do_0_crypt(keyword: u64, salt: u32, rounds: u32) -> String {

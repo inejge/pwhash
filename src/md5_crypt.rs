@@ -50,8 +50,8 @@ use std::cmp::min;
 
 /// Maximium salt length.
 pub const MAX_SALT_LEN: usize = 8;
-const MD5_MAGIC: &'static str = "$1$";
-const MD5_TRANSPOSE: &'static [u8] = b"\x0c\x06\x00\x0d\x07\x01\x0e\x08\x02\x0f\x09\x03\x05\x0a\x04\x0b";
+const MD5_MAGIC: &str = "$1$";
+const MD5_TRANSPOSE: &[u8] = b"\x0c\x06\x00\x0d\x07\x01\x0e\x08\x02\x0f\x09\x03\x05\x0a\x04\x0b";
 
 fn do_md5_crypt(pass: &[u8], salt: &str) -> Result<String> {
     let mut dummy_buf = [0u8; 6];

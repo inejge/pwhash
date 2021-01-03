@@ -57,8 +57,8 @@ pub use sha2_crypt::MAX_ROUNDS;
 pub use sha2_crypt::DEFAULT_ROUNDS;
 pub use sha2_crypt::MAX_SALT_LEN;
 
-const SHA256_MAGIC: &'static str = "$5$";
-const SHA256_TRANSPOSE: &'static [u8] = b"\x14\x0a\x00\x0b\x01\x15\x02\x16\x0c\x17\x0d\x03\x0e\x04\x18\x05\
+const SHA256_MAGIC: &str = "$5$";
+const SHA256_TRANSPOSE: &[u8] = b"\x14\x0a\x00\x0b\x01\x15\x02\x16\x0c\x17\x0d\x03\x0e\x04\x18\x05\
 					  \x19\x0f\x1a\x10\x06\x11\x07\x1b\x08\x1c\x12\x1d\x13\x09\x1e\x1f";
 
 fn do_sha256_crypt(pass: &[u8], salt: &str, rounds: Option<u32>) -> Result<String> {

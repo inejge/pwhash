@@ -208,7 +208,7 @@ impl<'a> Default for BcryptSetup<'a> {
 fn bcrypt(cost: u32, salt: &[u8], password: &[u8], output: &mut [u8]) {
     assert!(cost < 32);
     assert!(salt.len() == 16);
-    assert!(0 < password.len() && password.len() <= 72);
+    assert!(password.len() <= 72 && !password.is_empty());
     assert!(output.len() == 24);
 
     let mut state = Blowfish::bc_init_state();
@@ -232,7 +232,7 @@ fn bcrypt(cost: u32, salt: &[u8], password: &[u8], output: &mut [u8]) {
 }
 
 fn do_bcrypt(pass: &[u8], salt: &[u8], cost: u32, variant: BcryptVariant) -> Result<String> {
-    let mut upd_pass = pass.iter().map(|b| *b).chain(iter::repeat(0u8)).take(min(pass.len() + 1, MAX_PASS_LEN)).collect::<Vec<_>>();
+    let mut upd_pass = pass.iter().copied().chain(iter::repeat(0u8)).take(min(pass.len() + 1, MAX_PASS_LEN)).collect::<Vec<_>>();
     let mut output = [0u8; 24];
     bcrypt(cost, &salt, &upd_pass[..], &mut output);
     for b in &mut upd_pass {

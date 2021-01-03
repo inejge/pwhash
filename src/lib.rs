@@ -163,14 +163,14 @@ pub trait FindNul {
 
 impl FindNul for str {
     fn nul_terminated_subslice(&self) -> &[u8] {
-        let nul_pos = self.as_bytes().windows(1).position(|window| window == &[0u8]).unwrap_or(self.len());
+        let nul_pos = self.as_bytes().windows(1).position(|window| window == [0u8]).unwrap_or_else(|| self.len());
         self[..nul_pos].as_bytes()
     }
 }
 
 impl FindNul for [u8] {
     fn nul_terminated_subslice(&self) -> &[u8] {
-        let nul_pos = self.windows(1).position(|window| window == &[0u8]).unwrap_or(self.len());
+        let nul_pos = self.windows(1).position(|window| window == [0u8]).unwrap_or(self.len());
         self[..nul_pos].as_ref()
     }
 }
@@ -372,7 +372,7 @@ pub mod unix {
 		"sha1" => sha1_crypt::hash_with(hash, pass),
 		"5" => sha256_crypt::hash_with(hash, pass),
 		"6" => sha512_crypt::hash_with(hash, pass),
-		_ => return Err(Error::InvalidHashString)
+		_ => Err(Error::InvalidHashString),
 	    },
 	    _ => unix_crypt::hash_with(hash, pass)
 	}

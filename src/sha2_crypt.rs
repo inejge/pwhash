@@ -142,7 +142,7 @@ pub fn parse_sha2_hash<'a>(hash: &'a str, magic: &str) -> Result<HashSetup<'a>> 
     } else {
 	return Err(Error::InvalidHashString);
     };
-    Ok(HashSetup { salt: Some(salt), rounds: rounds })
+    Ok(HashSetup { salt: Some(salt), rounds })
 }
 
 pub fn sha2_hash_with(param: HashSetup, pass: &[u8], hf: fn(&[u8], &str, Option<u32>) -> Result<String>) -> Result<String> {
