@@ -170,7 +170,7 @@ impl FindNul for str {
 
 impl FindNul for [u8] {
     fn nul_terminated_subslice(&self) -> &[u8] {
-        let nul_pos = self.windows(1).position(|window| window == [0u8]).unwrap_or(self.len());
+        let nul_pos = self.windows(1).position(|window| window == [0u8]).unwrap_or_else(|| self.len());
         self[..nul_pos].as_ref()
     }
 }
