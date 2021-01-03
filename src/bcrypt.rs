@@ -82,7 +82,7 @@ pub const MIN_COST: u32 = 4;
 /// Maximum cost.
 pub const MAX_COST: u32 = 31;
 /// Default cost.
-pub const DEFAULT_COST: u32 = 8;
+pub const DEFAULT_COST: u32 = 10;
 
 /// Identifiers of algorithm variants which can be produced.
 ///
