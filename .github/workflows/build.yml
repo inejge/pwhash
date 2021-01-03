@@ -1,0 +1,45 @@
+name: continuous integration
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-2019, macOS-latest]
+        rust: [stable, nightly]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Install rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - name: Build
+        uses: actions-rs/cargo@v1
+        # Force to build without warnings
+        env:
+          RUSTFLAGS: '-D warnings'
+        with:
+          command: build
+          args: --verbose
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        # force to build tests without warnings
+        env:
+          RUSTFLAGS: '-D warnings'
+        with:
+          command: test
+          args: --verbose
+
