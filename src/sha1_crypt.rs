@@ -48,10 +48,10 @@
 use hmac::{Hmac, Mac, NewMac};
 use sha1::Sha1;
 use super::{Result, HashSetup, IntoHashSetup, consteq};
-use enc_dec::{sha1crypt_hash64_encode, bcrypt_hash64_decode};
-use error::Error;
-use random;
-use parse::{self, HashIterator};
+use crate::enc_dec::{sha1crypt_hash64_encode, bcrypt_hash64_decode};
+use crate::error::Error;
+use crate::random;
+use crate::parse::{self, HashIterator};
 
 const MIN_ROUNDS: u32 = 1;
 /// Default number of rounds.
@@ -146,7 +146,7 @@ pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use ::HashSetup;
+    use super::HashSetup;
 
     #[test]
     fn custom() {

@@ -19,12 +19,6 @@
 //! pwhash = "0.3"
 //! ```
 //!
-//! Also, import the crate to your crate root:
-//!
-//! ```
-//! extern crate pwhash;
-//! ```
-//!
 //! # Examples
 //!
 //! To verify a password hashed with a known algorithm:
@@ -88,14 +82,6 @@
 
 #![warn(missing_docs)]
 
-extern crate rand;
-extern crate md5;
-extern crate sha1;
-extern crate sha2;
-extern crate blowfish;
-extern crate hmac;
-extern crate byteorder;
-
 mod enc_dec;
 pub mod error;
 pub mod unix_crypt;
@@ -128,7 +114,7 @@ pub struct HashSetup<'a> {
 /// A trait for converting a type into a `HashSetup` struct.
 pub trait IntoHashSetup<'a> {
     /// The conversion function.
-    fn into_hash_setup(self, fn(&'a str) -> Result<HashSetup<'a>>) -> Result<HashSetup<'a>>;
+    fn into_hash_setup(self, f: fn(&'a str) -> Result<HashSetup<'a>>) -> Result<HashSetup<'a>>;
 }
 
 impl<'a> IntoHashSetup<'a> for &'a str {
@@ -190,7 +176,7 @@ mod random {
     use rand::{Rng, random};
     use rand::rngs::OsRng;
     use rand::distributions::Standard;
-    use enc_dec::bcrypt_hash64_encode;
+    use crate::enc_dec::bcrypt_hash64_encode;
 
     pub fn gen_salt_str(chars: usize) -> String {
 	let bytes = ((chars + 3) / 4) * 3;
@@ -356,9 +342,9 @@ pub mod unix {
     //! the functions in this module can be used to verify or re-calculate the
     //! hash.
     use super::{Result, consteq};
-    use parse::{self, HashIterator};
-    use error::Error;
-    use {bsdi_crypt, md5_crypt, bcrypt, sha1_crypt, sha256_crypt, sha512_crypt, unix_crypt};
+    use crate::parse::{self, HashIterator};
+    use crate::error::Error;
+    use crate::{bsdi_crypt, md5_crypt, bcrypt, sha1_crypt, sha256_crypt, sha512_crypt, unix_crypt};
 
     /// A Unix __crypt__(3) work-alike.
     pub fn crypt<B: AsRef<[u8]>>(pass: B, hash: &str) -> Result<String> {

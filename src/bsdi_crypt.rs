@@ -42,11 +42,11 @@
 //! * *`{checksum}`* is a 11-character Base64 encoding of the checksum.
 
 use super::{Result, HashSetup, IntoHashSetup, consteq};
-use des_crypt::bsdi_crypt;
-use enc_dec::decode_val;
-use error::Error;
-use random;
-use parse::{self, HashIterator};
+use crate::des_crypt::bsdi_crypt;
+use crate::enc_dec::decode_val;
+use crate::error::Error;
+use crate::random;
+use crate::parse::{self, HashIterator};
 
 const MIN_ROUNDS: u32 = 1;
 const MAX_ROUNDS: u32 = (1 << 24) - 1;
@@ -120,7 +120,7 @@ pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use ::HashSetup;
+    use super::HashSetup;
 
     #[test]
     #[allow(deprecated)]

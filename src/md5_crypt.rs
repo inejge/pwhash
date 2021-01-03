@@ -42,10 +42,10 @@
 
 use md5::{Md5, Digest};
 use super::{Result, HashSetup, IntoHashSetup, consteq};
-use error::Error;
-use random;
-use parse::{self, HashIterator};
-use enc_dec::{md5_sha2_hash64_encode, bcrypt_hash64_decode};
+use crate::error::Error;
+use crate::random;
+use crate::parse::{self, HashIterator};
+use crate::enc_dec::{md5_sha2_hash64_encode, bcrypt_hash64_decode};
 use std::cmp::min;
 
 /// Maximium salt length.
@@ -175,7 +175,7 @@ pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use ::HashSetup;
+    use super::HashSetup;
 
     #[test]
     #[allow(deprecated)]

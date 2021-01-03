@@ -64,10 +64,10 @@
 //! * _`{checksum}`_ is a 31-character Base64 encoding of the computed hash.
 
 use super::{Result, HashSetup, consteq};
-use enc_dec::{bcrypt_hash64_encode,bcrypt_hash64_decode};
-use error::Error;
-use random;
-use parse::{self, HashIterator};
+use crate::enc_dec::{bcrypt_hash64_encode,bcrypt_hash64_decode};
+use crate::error::Error;
+use crate::random;
+use crate::parse::{self, HashIterator};
 use std::{iter, fmt};
 use std::cmp::min;
 use std::default::Default;

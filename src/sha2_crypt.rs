@@ -9,11 +9,11 @@
 
 use std::cmp::min;
 use sha2::Digest;
-use enc_dec::{md5_sha2_hash64_encode, bcrypt_hash64_decode};
+use crate::enc_dec::{md5_sha2_hash64_encode, bcrypt_hash64_decode};
 use super::{Result, HashSetup};
-use error::Error;
-use parse::{self, HashIterator};
-use random;
+use crate::error::Error;
+use crate::parse::{self, HashIterator};
+use crate::random;
 
 /// Minimum rounds.
 pub const MIN_ROUNDS: u32 = 1000;

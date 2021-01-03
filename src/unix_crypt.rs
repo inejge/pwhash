@@ -40,8 +40,8 @@
 //! * *`{checksum}`* is a 11-character Base64 encoding of the checksum.
 
 use super::{Result, consteq};
-use des_crypt::unix_crypt;
-use random;
+use crate::des_crypt::unix_crypt;
+use crate::random;
 
 /// Salt length.
 pub const SALT_LEN: usize = 2;

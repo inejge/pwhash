@@ -49,13 +49,13 @@
 
 use sha2::Sha256;
 use super::{Result, HashSetup, IntoHashSetup, consteq};
-use random;
-use sha2_crypt::{sha2_crypt, parse_sha2_hash, sha2_hash_with};
+use crate::random;
+use crate::sha2_crypt::{sha2_crypt, parse_sha2_hash, sha2_hash_with};
 
-pub use sha2_crypt::MIN_ROUNDS;
-pub use sha2_crypt::MAX_ROUNDS;
-pub use sha2_crypt::DEFAULT_ROUNDS;
-pub use sha2_crypt::MAX_SALT_LEN;
+pub use crate::sha2_crypt::MIN_ROUNDS;
+pub use crate::sha2_crypt::MAX_ROUNDS;
+pub use crate::sha2_crypt::DEFAULT_ROUNDS;
+pub use crate::sha2_crypt::MAX_SALT_LEN;
 
 const SHA256_MAGIC: &str = "$5$";
 const SHA256_TRANSPOSE: &[u8] = b"\x14\x0a\x00\x0b\x01\x15\x02\x16\x0c\x17\x0d\x03\x0e\x04\x18\x05\
@@ -102,7 +102,7 @@ pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use ::HashSetup;
+    use super::HashSetup;
 
     #[test]
     #[allow(deprecated)]

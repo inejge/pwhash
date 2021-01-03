@@ -50,13 +50,13 @@
 
 use sha2::Sha512;
 use super::{Result, HashSetup, IntoHashSetup, consteq};
-use random;
-use sha2_crypt::{sha2_crypt, parse_sha2_hash, sha2_hash_with};
+use crate::random;
+use crate::sha2_crypt::{sha2_crypt, parse_sha2_hash, sha2_hash_with};
 
-pub use sha2_crypt::MIN_ROUNDS;
-pub use sha2_crypt::MAX_ROUNDS;
-pub use sha2_crypt::DEFAULT_ROUNDS;
-pub use sha2_crypt::MAX_SALT_LEN;
+pub use crate::sha2_crypt::MIN_ROUNDS;
+pub use crate::sha2_crypt::MAX_ROUNDS;
+pub use crate::sha2_crypt::DEFAULT_ROUNDS;
+pub use crate::sha2_crypt::MAX_SALT_LEN;
 
 const SHA512_MAGIC: &str = "$6$";
 const SHA512_TRANSPOSE: &[u8] = b"\x2a\x15\x00\x01\x2b\x16\x17\x02\x2c\x2d\x18\x03\x04\x2e\x19\x1a\
@@ -102,7 +102,7 @@ pub fn verify<B: AsRef<[u8]>>(pass: B, hash: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use ::HashSetup;
+    use super::HashSetup;
 
     #[test]
     fn custom() {

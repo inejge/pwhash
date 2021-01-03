@@ -9,7 +9,7 @@
 
 use std::char;
 use std::str::from_utf8;
-use error::Error;
+use crate::error::Error;
 use super::Result;
 
 const CRYPT_HASH64: &[u8] = b"./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
