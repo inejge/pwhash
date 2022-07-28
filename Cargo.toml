@@ -13,7 +13,7 @@ categories = ["cryptography", "authentication"]
 edition = "2018"
 
 [dependencies]
-md-5 = "0.9"
+md-5 = "0.10.1"
 sha-1 = "0.9"
 sha2 = "0.9"
 blowfish = { version = "0.7", features = ["bcrypt"] }
