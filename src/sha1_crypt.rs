@@ -45,7 +45,7 @@
 //!
 //! * *`{checksum}`* is a 28-character Base64 encoding of the checksum.
 
-use hmac::{Hmac, Mac, NewMac};
+use hmac::{Hmac, Mac};
 use sha1::Sha1;
 use super::{Result, HashSetup, IntoHashSetup, consteq};
 use crate::enc_dec::{sha1crypt_hash64_encode, bcrypt_hash64_decode};
@@ -65,11 +65,11 @@ pub const DEFAULT_SALT_LEN: usize = 8;
 fn do_sha1_crypt(pass: &[u8], salt: &str, rounds: u32) -> Result<String> {
     let mut dummy_buf = [0u8; 48];
     bcrypt_hash64_decode(salt, &mut dummy_buf)?;
-    let mut hmac = Hmac::<Sha1>::new_varkey(pass).map_err(|_| Error::InsufficientLength)?;
+    let mut hmac = Hmac::<Sha1>::new_from_slice(pass).map_err(|_| Error::InsufficientLength)?;
     hmac.update(format!("{}$sha1${}", salt, rounds).as_bytes());
     let mut result = hmac.finalize();
     for _ in 1..rounds {
-        let mut hmac = Hmac::<Sha1>::new_varkey(pass).map_err(|_| Error::InsufficientLength)?;
+        let mut hmac = Hmac::<Sha1>::new_from_slice(pass).map_err(|_| Error::InsufficientLength)?;
         hmac.update(&result.into_bytes());
         result = hmac.finalize();
     }

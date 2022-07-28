@@ -31,7 +31,7 @@ pub fn sha2_crypt<D: Digest>(pass: &[u8], salt: &str, rounds: Option<u32>,
     bcrypt_hash64_decode(salt, &mut dummy_buf)?;
 
     let mut dgst_b = new_digest();
-    let dsize = D::output_size();
+    let dsize = <D as Digest>::output_size();
     dgst_b.update(pass);
     dgst_b.update(salt.as_bytes());
     dgst_b.update(pass);

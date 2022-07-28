@@ -222,7 +222,7 @@ fn bcrypt(cost: u32, salt: &[u8], password: &[u8], output: &mut [u8]) {
     let mut ctext = [0x4f727068, 0x65616e42, 0x65686f6c, 0x64657253, 0x63727944, 0x6f756274];
     for i in (0..6).step_by(2) {
         for _ in 0..64 {
-            let (l, r) = state.bc_encrypt(ctext[i], ctext[i+1]);
+            let [l, r] = state.bc_encrypt([ctext[i], ctext[i+1]]);
             ctext[i] = l;
             ctext[i+1] = r;
         }
