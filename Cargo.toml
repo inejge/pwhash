@@ -12,6 +12,13 @@ keywords = ["password", "hash", "hashing", "crypt"]
 categories = ["cryptography", "authentication"]
 edition = "2021"
 
+[[bin]]
+name = "pwhash"
+required-features = ["binary"]
+
+[features]
+binary = ["clap", "rpassword"]
+
 [dependencies]
 md-5 = "0.10.1"
 sha-1 = "0.10.0"
@@ -20,3 +27,5 @@ blowfish = { version = "0.9.1", features = ["bcrypt"] }
 hmac = "0.12.1"
 byteorder = "1.4.3"
 rand = "0.8.5"
+clap = { version = "4.0.10", features = ["derive"], optional = true }
+rpassword = { version = "7.0.0", optional = true }
