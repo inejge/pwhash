@@ -1,7 +1,8 @@
 use pwhash::{bcrypt, bsdi_crypt, md5_crypt, sha1_crypt, sha256_crypt, sha512_crypt, unix, unix_crypt};
 
 use std::io;
-use clap::{Args, Parser, Subcommand, ValueEnum};
+use clap::{Args, CommandFactory, Parser, Subcommand, ValueEnum};
+use clap_complete::Shell;
 
 #[derive(Debug, Parser)]
 #[command(author, version, about)]
@@ -19,6 +20,10 @@ struct Cli {
 enum Commands {
     Generate(GenerateArgs),
     Validate(ValidateArgs),
+    Completion{
+	#[arg(value_enum, default_value_t = Shell::Bash)]
+	shell: Shell
+    },
 }
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
@@ -80,8 +85,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match cmd {
 	Commands::Generate(args) => generate(args)?,
 	Commands::Validate(args) => validate(args)?,
+	Commands::Completion{shell} => generate_completion(shell),
     };
     Ok(())
+}
+
+fn generate_completion(shell: Shell) {
+    let mut command = Cli::command();
+    let name = command.get_name().to_string();
+    clap_complete::generate(shell, &mut command, name, &mut io::stdout())
 }
 
 fn prompt_password(password: Option<String>) -> io::Result<String> {
